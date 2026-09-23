@@ -200,7 +200,7 @@ export const EXERCISES: Exercise[] = [
     compound: true,
   },
   {
-    id: "jalon-unilateral",
+    id: "jalon-uni",
     name: "Jalón al pecho unilateral",
     muscle: "espalda",
     secondary: ["biceps"],
@@ -209,7 +209,7 @@ export const EXERCISES: Exercise[] = [
       "Pecho alto",
       "Hombro abajo",
       "Llevá el codo hacia abajo",
-      "No gires el torso",
+      "Brazos pegados",
       "Subí controlando"
     ],
     defaultSets: 3,
