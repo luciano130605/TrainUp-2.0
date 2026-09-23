@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--tu-bg);
+  --color-chassis: var(--tu-chassis);
+  --color-surface: var(--tu-surface);
+  --color-elevated: var(--tu-elevated);
+  --color-fg: var(--tu-fg);
+  --color-muted: var(--tu-muted);
+  --color-subtle: var(--tu-subtle);
+  --color-accent: var(--tu-accent);
+  --color-accent-fg: var(--tu-accent-fg);
+  --color-line: var(--tu-line);
+  --color-line-strong: var(--tu-line-strong);
+  --color-danger: var(--tu-danger);
+  --color-warn: var(--tu-warn);
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --shadow-border: 0 0 0 1px var(--tu-line);
+  --shadow-border-hover: 0 0 0 1px var(--tu-line-strong);
+  --ease-out-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root,
+[data-theme="dark"] {
+  --tu-bg: #090a09;
+  --tu-chassis: #050605;
+  --tu-surface: #131513;
+  --tu-elevated: #1b1e1b;
+  --tu-fg: #edeee9;
+  --tu-muted: #8a9086;
+  --tu-subtle: #5c635c;
+  --tu-accent: #6ee7b7;
+  --tu-accent-fg: #08110c;
+  --tu-line: rgb(237 238 233 / 10%);
+  --tu-line-strong: rgb(237 238 233 / 18%);
+  --tu-danger: #e07a6a;
+  --tu-warn: #d4b483;
+}
+
+[data-theme="light"] {
+  --tu-bg: #f3f4ef;
+  --tu-chassis: #e4e6dc;
+  --tu-surface: #fcfcf8;
+  --tu-elevated: #eceee6;
+  --tu-fg: #141613;
+  --tu-muted: #5c635c;
+  --tu-subtle: #8a9186;
+  --tu-accent: #0f7a54;
+  --tu-accent-fg: #f4f5ef;
+  --tu-line: rgb(20 22 19 / 10%);
+  --tu-line-strong: rgb(20 22 19 / 18%);
+  --tu-danger: #c45b4c;
+  --tu-warn: #9a7a3a;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--tu-chassis);
+    color: var(--tu-fg);
+    overscroll-behavior: none;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--tu-chassis);
+    font-family: var(--font-sans);
+    color: var(--tu-fg);
+    touch-action: manipulation;
+    overscroll-behavior: none;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-family: var(--font-display);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .pressable {
+    transition-property: transform;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out-smooth);
+  }
+  .pressable:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  .stagger-in > * {
+    animation: rise 420ms var(--ease-out-smooth) both;
+  }
+  .stagger-in > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger-in > *:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .stagger-in > *:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .stagger-in > *:nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .stagger-in > *:nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .stagger-in > *:nth-child(6) {
+    animation-delay: 250ms;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Never let a notched phone put app chrome under the status bar / home bar.
+   `max()` keeps a sane minimum in browsers where the env() resolves to 0. */
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+img.media {
+  outline: 1px solid var(--tu-line);
+  outline-offset: -1px;
+}
+
+/* Mid/low-end phones: static gradient instead of a 100 kB+ photo in the hero. */
+.low-power .hero-media {
+  display: none;
+}
+.low-power .hero-art {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--tu-accent) 26%, var(--tu-bg)),
+    var(--tu-bg) 62%
+  );
+}
+
+.low-power .stagger-in > *,
+.low-power .pressable {
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger-in > *,
+  .pressable {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+}

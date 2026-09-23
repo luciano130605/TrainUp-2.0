@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "TrainUp",
+      "hasCanvas": false,
+      "bodyTextLen": 31,
+      "bodyTextHash": "e2dfd5ea48ad8b6377dcc788b8c52cc5fa2e527cc066a656b80374b0c9b5c95b",
+      "bodyTextPrefix": "TRAINUP El trabajo, registrado.",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "TrainUp",
+      "hasCanvas": false,
+      "bodyTextLen": 31,
+      "bodyTextHash": "e2dfd5ea48ad8b6377dcc788b8c52cc5fa2e527cc066a656b80374b0c9b5c95b",
+      "bodyTextPrefix": "TRAINUP El trabajo, registrado.",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
