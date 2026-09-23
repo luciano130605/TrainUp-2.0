@@ -69,13 +69,7 @@ export function HomeView() {
         >
 
           <div className="hero-art relative h-48 overflow-hidden rounded-2xl sm:h-56">
-            <img
-              src={COVER_SRC[today.cover]}
-              alt=""
-              className="media hero-media h-full w-full object-cover"
-              decoding="async"
-              fetchPriority="high"
-            />
+           
             <div className="absolute inset-0 bg-linear-to-t from-bg via-bg/60 to-bg/5" />
             <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
               <p className="text-[11px] uppercase tracking-[0.2em] text-accent">
