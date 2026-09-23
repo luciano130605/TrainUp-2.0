@@ -70,7 +70,7 @@ export const EXERCISES: Exercise[] = [
     compound: true,
   },
   {
-    id: "press-inclinado",
+    id: "press-inclinado-manc",
     name: "Press inclinado con mancuernas",
     muscle: "pecho",
     secondary: ["hombros", "triceps"],
@@ -301,7 +301,7 @@ export const EXERCISES: Exercise[] = [
     compound: false,
   },
   {
-    id: "laterales",
+    id: "laterales.polea",
     name: "Elevaciones laterales",
     muscle: "hombros",
     equipment: "polea",
@@ -394,8 +394,8 @@ export const EXERCISES: Exercise[] = [
     compound: false,
   },
   {
-    id: "curl-femoral",
-    name: "Curl femoral",
+    id: "curl-femoral-sentado",
+    name: "Curl femoral sentado",
     muscle: "piernas",
     equipment: "maquina",
     cues: ["Cadera pegada", "Apriete 1s", "Estirar sin rebotar"],
@@ -869,19 +869,21 @@ function fromLocal(ej: EjercicioLocal): Exercise {
 
 export const LOCAL_EXERCISES: Exercise[] = ejerciciosLocal.map(fromLocal);
 
-// The owner's catalogue first: `getExercise` also falls back to index 0, and a
-// movement present in their gym is the more useful placeholder than a built-in.
 function uniqueExercises(exercises: Exercise[]) {
   const seen = new Set<string>();
+
   return exercises.filter((exercise) => {
-    const key = `${normalizeToken(exercise.name)}|${exercise.equipment}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    if (seen.has(exercise.id)) return false;
+
+    seen.add(exercise.id);
     return true;
   });
 }
+export const ALL_EXERCISES = uniqueExercises([
+  ...LOCAL_EXERCISES,
+  ...EXERCISES,
+]);
 
-const ALL_EXERCISES: Exercise[] = uniqueExercises([...LOCAL_EXERCISES, ...EXERCISES]);
 const byId = new Map(ALL_EXERCISES.map((e) => [e.id, e]));
 
 export function getExercise(id: string): Exercise {
@@ -892,16 +894,19 @@ export function getExercise(id: string): Exercise {
  * Search across both catalogues. The owner's list is listed first so the
  * movements actually present in their gym lead the results.
  */
-export function searchExercises(query: string, muscle?: Muscle | "todos") {
+export function searchExercises(
+  query: string,
+  muscle: Muscle | "todos" = "todos",
+) {
   const q = normalizeToken(query);
-  return ALL_EXERCISES.filter((e) => {
-    const muscleOk =
-      !muscle ||
-      muscle === "todos" ||
-      e.muscle === muscle ||
-      (isLegMuscle(muscle) && isLegMuscle(e.muscle));
-    if (!q) return muscleOk;
-    const hay = normalizeToken(`${e.name} ${MUSCLE_LABEL[e.muscle]} ${EQUIPMENT_LABEL[e.equipment]}`);
-    return muscleOk && hay.includes(q);
+
+  return ALL_EXERCISES.filter((ex) => {
+    const matchesQuery =
+      !q || normalizeToken(ex.name).includes(q);
+
+    const matchesMuscle =
+      muscle === "todos" || ex.muscle === muscle;
+
+    return matchesQuery && matchesMuscle;
   });
 }
