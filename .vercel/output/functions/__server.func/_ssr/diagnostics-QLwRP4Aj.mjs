@@ -1,7 +1,7 @@
 import { r as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-CcvdN_gc.mjs";
-import { t as authMiddleware } from "./middleware-BCt81tep.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/diagnostics-BqVk1mSg.js
+import { t as authMiddleware } from "./middleware-wG7fM00R.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/diagnostics-QLwRP4Aj.js
 /** One table's row count for the signed-in athlete. */
 var databaseReport_createServerFn_handler = createServerRpc({
 	id: "9a0473252c7ff8500a3f419ad2bb5d17f05ec6fa67778cef12b95000f1c25fc6",

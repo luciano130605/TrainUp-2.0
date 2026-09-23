@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronRight, Plus, Trash2 } from "lucide-react";
-import { getExercise, MUSCLE_LABEL } from "@/lib/exercises";
+import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL } from "@/lib/exercises";
 import { formatWeight, WEEKDAY_SHORT } from "@/lib/format";
 import { planPlates, BAR_OPTIONS, PLATE_KG } from "@/lib/plates";
 import { useTrain } from "@/lib/store";
@@ -191,6 +191,7 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{ex.name}</span>
                   <span className="block truncate text-xs tabular-nums text-muted">
+                    {MUSCLE_LABEL[ex.muscle]} · {EQUIPMENT_LABEL[ex.equipment]} ·{" "}
                     {slot.sets} series × {slot.reps} reps
                     {slot.weightKg ? ` · ${formatWeight(slot.weightKg, unit)}` : ""}
                     {" · "}
@@ -236,7 +237,7 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
         subtitle={
           editSlot
             ? `${MUSCLE_LABEL[getExercise(editSlot.exerciseId).muscle]} · ${
-                getExercise(editSlot.exerciseId).equipment
+                EQUIPMENT_LABEL[getExercise(editSlot.exerciseId).equipment]
               }`
             : undefined
         }

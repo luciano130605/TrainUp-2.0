@@ -8991,4 +8991,4 @@ var auth = betterAuth({
 	]
 });
 //#endregion
-export { hasGateSessionMarker as a, gateIdentityEnabled as i, auth as n, authConfigured as r, GROK_PROVIDERS as t };
+export { hasGateSessionMarker as i, authConfigured as n, gateIdentityEnabled as r, auth as t };

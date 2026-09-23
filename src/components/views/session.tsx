@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Plus, Replace, X } from "lucide-react";
-import { getExercise, MUSCLE_LABEL } from "@/lib/exercises";
+import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL } from "@/lib/exercises";
 import {
   formatClock,
   formatDuration,
@@ -123,7 +123,9 @@ export function SessionView() {
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          <p className="text-xs uppercase tracking-[0.18em] text-accent">{MUSCLE_LABEL[exercise.muscle]}</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-accent">
+            {MUSCLE_LABEL[exercise.muscle]} · {EQUIPMENT_LABEL[exercise.equipment]}
+          </p>
           <h1 className="mt-1 font-display text-5xl leading-none tracking-tight">{exercise.name}</h1>
           {exercise.cues.length ? (
             <p className="mt-3 text-sm text-muted">{exercise.cues.join(" · ")}</p>

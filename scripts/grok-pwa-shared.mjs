@@ -152,13 +152,16 @@ export function stripInstallParams(url) {
 }
 
 export function renderInstallPageHtml(template, { host, url } = {}) {
+  const site = readOgSite();
+  const appName = resolveOgTitle(site, appNameFromHost(host), host);
   return String(template)
-    .replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host)))
+    .replaceAll("{{APP_NAME}}", escapeHtml(appName))
     .replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
 }
 
 export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
+  const site = readOgSite();
+  const name = resolveOgTitle(site, appNameFromHost(hostHeader), hostHeader);
   return JSON.stringify(
     {
       name,
@@ -174,6 +177,18 @@ export function renderWebManifest(hostHeader) {
           src: "/__grok/icon-180.png",
           sizes: "180x180",
           type: "image/png",
+        },
+        {
+          src: "/icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any maskable",
+        },
+        {
+          src: "/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable",
         },
       ],
     },

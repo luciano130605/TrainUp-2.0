@@ -2,10 +2,10 @@ import { o as __toESM } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { r as createServerFn } from "./ssr.mjs";
-import { t as authMiddleware } from "./middleware-BCt81tep.mjs";
-import { a as useCurrentUserState, n as cn } from "./mark-zNoHINay.mjs";
-import { n as Splash, r as createSsrRpc, t as RedirectToSignIn } from "./splash-CUhJA5FY.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/diagnostico-BQon5TAP.js
+import { t as authMiddleware } from "./middleware-wG7fM00R.mjs";
+import { a as useCurrentUserState, n as cn } from "./mark-SSOXUADh.mjs";
+import { n as Splash, r as createSsrRpc, t as RedirectToSignIn } from "./splash-BPtHK1vV.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/diagnostico-CtyBtElZ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /** One table's row count for the signed-in athlete. */

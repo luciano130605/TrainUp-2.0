@@ -1,20 +1,20 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
-import { i as signOut } from "./client-IWHfIGH2.mjs";
+import "./client-BjbFQbVA.mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { n as require_react_dom } from "../_libs/@radix-ui/react-primitive+[...].mjs";
 import { r as createServerFn } from "./ssr.mjs";
-import { t as authMiddleware } from "./middleware-BCt81tep.mjs";
-import { a as useCurrentUserState, i as useCurrentUser, n as cn, r as uid, t as Mark } from "./mark-zNoHINay.mjs";
-import { n as Splash, r as createSsrRpc, t as RedirectToSignIn } from "./splash-CUhJA5FY.mjs";
-import { a as hasGateSessionMarker } from "./server-BHRbO-e7.mjs";
-import { t as Button } from "./button-BXLaTDzf.mjs";
+import { t as authMiddleware } from "./middleware-wG7fM00R.mjs";
+import { a as useCurrentUserState, i as useCurrentUser, n as cn, r as uid, t as Mark } from "./mark-SSOXUADh.mjs";
+import { n as Splash, r as createSsrRpc, t as RedirectToSignIn } from "./splash-BPtHK1vV.mjs";
+import { i as hasGateSessionMarker } from "./server-BHRbO-e7.mjs";
+import { t as Button } from "./button-D9xwQ7hg.mjs";
 import { _ as Check, a as Search, c as Plus, d as Minus, f as House, g as ChevronLeft, h as ChevronRight, i as Trash2, l as Play, m as CirclePlus, n as User, o as RotateCcw, p as Dumbbell, s as Replace, t as X, u as Pause, v as Activity } from "../_libs/lucide-react.mjs";
 import { n as persist, r as create, t as createJSONStorage } from "../_libs/zustand.mjs";
 import { a as startOfWeek, i as format, n as subDays, r as isToday, t as es } from "../_libs/date-fns.mjs";
 import { a as ResponsiveContainer, i as Area, n as YAxis, o as Tooltip, r as XAxis, t as AreaChart } from "../_libs/recharts+[...].mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/@radix-ui/react-switch+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DUNKRzV4.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-Bryxag8y.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
@@ -88,6 +88,14 @@ var ejerciciosLocal = [
 		nombre: "Patada de triceps (Polea)",
 		subMusculos: [],
 		gif: "/gifs/patada-polea.jpg",
+		parteDelCuerpo: "Triceps",
+		equipamiento: "Polea"
+	},
+	{
+		id: "0067",
+		nombre: "Katana",
+		subMusculos: [],
+		gif: "/gifs/katana-polea.jpg",
 		parteDelCuerpo: "Triceps",
 		equipamiento: "Polea"
 	},
@@ -219,6 +227,18 @@ var ejerciciosLocal = [
 		id: "0064",
 		nombre: "Remo unilateral (Polea)",
 		gif: "/gifs/remo-uni-polea.jpg",
+		parteDelCuerpo: "Espalda",
+		subMusculos: [
+			"Dorsales",
+			"Bíceps",
+			"Antebrazos"
+		],
+		equipamiento: "Polea"
+	},
+	{
+		id: "0068",
+		nombre: "Jalón al pecho con una sola mano",
+		gif: "/gifs/jalon-una-mano-polea.jpg",
 		parteDelCuerpo: "Espalda",
 		subMusculos: [
 			"Dorsales",
@@ -1327,6 +1347,10 @@ var EQUIPMENT_BY_TOKEN = {
 function asEquipment(raw) {
 	return EQUIPMENT_BY_TOKEN[normalizeToken(raw)] ?? "peso-corporal";
 }
+/** Removes duplicated equipment labels from catalogue names, e.g. "(Polea)". */
+function cleanExerciseName(raw) {
+	return raw.replace(/\s*\((?:barra|mancuernas?|maquina|maquinas|polea|peso|p\.?\s*corporal)\)\s*$/i, "").trim();
+}
 /**
 * Slots the owner's catalogue fills, laid over the curated defaults so a
 * movement keeps sensible sets/reps/rest instead of inventing them.
@@ -1434,7 +1458,7 @@ function fromLocal(ej) {
 	const rest = withCompoundRest(LOCAL_DEFAULTS[muscle], ej.nombre);
 	return {
 		id: `ex-${ej.id}`,
-		name: ej.nombre,
+		name: cleanExerciseName(ej.nombre),
 		muscle,
 		...secondary.length ? { secondary } : {},
 		equipment: asEquipment(ej.equipamiento),
@@ -1447,7 +1471,17 @@ function fromLocal(ej) {
 		...ej.esTiempo ? { esTiempo: true } : {}
 	};
 }
-var ALL_EXERCISES = [...ejerciciosLocal.map(fromLocal), ...EXERCISES];
+var LOCAL_EXERCISES = ejerciciosLocal.map(fromLocal);
+function uniqueExercises(exercises) {
+	const seen = /* @__PURE__ */ new Set();
+	return exercises.filter((exercise) => {
+		const key = `${normalizeToken(exercise.name)}|${exercise.muscle}|${exercise.equipment}`;
+		if (seen.has(key)) return false;
+		seen.add(key);
+		return true;
+	});
+}
+var ALL_EXERCISES = uniqueExercises([...LOCAL_EXERCISES, ...EXERCISES]);
 var byId = new Map(ALL_EXERCISES.map((e) => [e.id, e]));
 function getExercise(id) {
 	return byId.get(id) ?? ALL_EXERCISES[0];
@@ -2696,7 +2730,7 @@ var TAB_ITEMS = [
 ];
 function TabBar({ tab, onChange, className }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
-		className: cn("z-20 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 safe-bottom", className),
+		className: cn("fixed inset-x-0 bottom-0 z-30 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 shadow-[0_-16px_32px_rgb(0_0_0_/_0.18)] backdrop-blur safe-bottom", className),
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
 			className: "grid grid-cols-5",
 			children: TAB_ITEMS.map((item) => {
@@ -2730,7 +2764,7 @@ function AppShell({ children, tab, onChange, sidebarExtra, showNav }) {
 						className: "flex items-center gap-2 px-2",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mark, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-display text-2xl tracking-tight",
-							children: "TRAINUP"
+							children: "TrainUp"
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
@@ -3402,7 +3436,29 @@ function startOfLocalWeek() {
 	return d.getTime();
 }
 function Stepper({ value, onChange, step = 1, min = 0, suffix, wide }) {
+	const [editing, setEditing] = (0, import_react.useState)(false);
+	const [draft, setDraft] = (0, import_react.useState)("");
+	const inputRef = (0, import_react.useRef)(null);
 	const shown = Number.isInteger(value) ? String(value) : value.toFixed(1);
+	(0, import_react.useEffect)(() => {
+		if (!editing) setDraft(shown);
+	}, [editing, shown]);
+	(0, import_react.useEffect)(() => {
+		if (editing) {
+			inputRef.current?.focus();
+			inputRef.current?.select();
+		}
+	}, [editing]);
+	function commitDraft() {
+		const normalized = draft.trim().replace(",", ".");
+		const parsed = Number(normalized);
+		if (Number.isFinite(parsed)) onChange(Math.max(min, Math.round(parsed * 10) / 10));
+		setEditing(false);
+	}
+	function cancelDraft() {
+		setDraft(shown);
+		setEditing(false);
+	}
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: cn("flex h-12 items-center rounded-lg bg-elevated shadow-[var(--shadow-border)]", wide ? "min-w-0 flex-1" : "min-w-24"),
 		children: [
@@ -3415,8 +3471,23 @@ function Stepper({ value, onChange, step = 1, min = 0, suffix, wide }) {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex min-w-0 flex-1 flex-col items-center",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "font-display text-xl leading-none tabular-nums",
+				children: [editing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+					ref: inputRef,
+					value: draft,
+					inputMode: "decimal",
+					"aria-label": suffix ? `Cargar ${suffix}` : "Cargar valor",
+					onChange: (e) => setDraft(e.target.value),
+					onBlur: commitDraft,
+					onKeyDown: (e) => {
+						if (e.key === "Enter") e.currentTarget.blur();
+						else if (e.key === "Escape") cancelDraft();
+					},
+					className: "h-7 w-full min-w-0 bg-transparent text-center font-display text-xl leading-none tabular-nums outline-none"
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					className: "min-w-10 rounded px-1 font-display text-xl leading-none tabular-nums pressable",
+					onClick: () => setEditing(true),
+					"aria-label": suffix ? `Editar ${shown} ${suffix}` : `Editar ${shown}`,
 					children: shown
 				}), suffix ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 					className: "text-[10px] uppercase tracking-wider text-muted",
@@ -4133,6 +4204,11 @@ function Creator({ routine, onDone }) {
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 									className: "block truncate text-xs tabular-nums text-muted",
 									children: [
+										MUSCLE_LABEL[ex.muscle],
+										" · ",
+										EQUIPMENT_LABEL[ex.equipment],
+										" ·",
+										" ",
 										slot.sets,
 										" series × ",
 										slot.reps,
@@ -4180,7 +4256,7 @@ function Creator({ routine, onDone }) {
 				open: editSlot !== void 0,
 				onClose: () => setEditing(null),
 				title: editSlot ? getExercise(editSlot.exerciseId).name : "",
-				subtitle: editSlot ? `${MUSCLE_LABEL[getExercise(editSlot.exerciseId).muscle]} · ${getExercise(editSlot.exerciseId).equipment}` : void 0,
+				subtitle: editSlot ? `${MUSCLE_LABEL[getExercise(editSlot.exerciseId).muscle]} · ${EQUIPMENT_LABEL[getExercise(editSlot.exerciseId).equipment]}` : void 0,
 				footer: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					block: true,
 					onClick: () => setEditing(null),
@@ -4587,9 +4663,13 @@ function SessionView() {
 			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "min-h-0 flex-1 overflow-y-auto px-4 pb-4",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 						className: "text-xs uppercase tracking-[0.18em] text-accent",
-						children: MUSCLE_LABEL[exercise.muscle]
+						children: [
+							MUSCLE_LABEL[exercise.muscle],
+							" · ",
+							EQUIPMENT_LABEL[exercise.equipment]
+						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 						className: "mt-1 font-display text-5xl leading-none tracking-tight",
@@ -5021,7 +5101,7 @@ function Switch({ checked, onCheckedChange, className }) {
 }
 var loadGymState = createServerFn().middleware([authMiddleware]).handler(createSsrRpc("b0f2d35d820cb7ea70f0dfa19a57e7c23ed8cf1897b1cbb0a41a247e7d5bf90e"));
 var saveGymState = createServerFn({ method: "POST" }).middleware([authMiddleware]).validator((data) => data).handler(createSsrRpc("5da7e9d552febe8e34f1fef472aa8be2f54352ad43768247480ab6e41a81a870"));
-var deleteAccountData = createServerFn({ method: "POST" }).middleware([authMiddleware]).handler(createSsrRpc("621f4d045a35dd22c09a02b5c6a19d77e8cfadbdce92d601c6d5249dda4a1d4d"));
+createServerFn({ method: "POST" }).middleware([authMiddleware]).handler(createSsrRpc("621f4d045a35dd22c09a02b5c6a19d77e8cfadbdce92d601c6d5249dda4a1d4d"));
 var GOALS = [
 	"fuerza",
 	"hipertrofia",
@@ -5060,7 +5140,7 @@ function ProfileView() {
 	const [confirmDelete, setConfirmDelete] = (0, import_react.useState)(false);
 	const [signingOut, setSigningOut] = (0, import_react.useState)(false);
 	const [deleting, setDeleting] = (0, import_react.useState)(false);
-	const gateSession = typeof window !== "undefined" && hasGateSessionMarker();
+	typeof window !== "undefined" && hasGateSessionMarker();
 	function saveWeight() {
 		const n = Number(weight);
 		if (!Number.isFinite(n) || n <= 0) return;
@@ -5077,23 +5157,6 @@ function ProfileView() {
 			return;
 		}
 		updateSettings({ notifications: false });
-	}
-	async function onSignOut() {
-		setSigningOut(true);
-		try {
-			await signOut();
-		} finally {
-			setSigningOut(false);
-		}
-	}
-	async function onDeleteAccount() {
-		setDeleting(true);
-		try {
-			await deleteAccountData();
-			await signOut();
-		} catch {
-			setDeleting(false);
-		}
 	}
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "space-y-7 pb-10",
@@ -5284,41 +5347,7 @@ function ProfileView() {
 					})
 				]
 			}),
-			!isPending && user && !user.isDevFallback && !gateSession ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "space-y-2",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: "secondary",
-					block: true,
-					disabled: signingOut,
-					onClick: () => void onSignOut(),
-					children: signingOut ? "Cerrando…" : "Cerrar sesión"
-				}), confirmDelete ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "space-y-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "text-sm text-danger",
-						children: "Se borra la cuenta y todo el historial. No se puede deshacer."
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex gap-2",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-							variant: "secondary",
-							className: "flex-1",
-							onClick: () => setConfirmDelete(false),
-							children: "Cancelar"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-							variant: "danger",
-							className: "flex-1",
-							disabled: deleting,
-							onClick: () => void onDeleteAccount(),
-							children: deleting ? "Borrando…" : "Eliminar"
-						})]
-					})]
-				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: "ghost",
-					block: true,
-					onClick: () => setConfirmDelete(true),
-					children: "Eliminar cuenta"
-				})]
-			}) : null,
+			null,
 			confirmWipe ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "space-y-2",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {

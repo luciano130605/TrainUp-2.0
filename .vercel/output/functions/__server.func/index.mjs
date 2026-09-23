@@ -15,7 +15,7 @@ var grokOgIdentity = { "site": {
 	"title": "TrainUp",
 	"card": "custom",
 	"color": "090A09",
-	"description": "TrainUp — tu entrenamiento, claro y al grano.",
+	"description": "TrainUp: tus rutinas, pesos y progreso siempre a mano.",
 	"image": "/og.jpg"
 } };
 //#endregion
@@ -25,7 +25,7 @@ var grokOgIdentity = { "site": {
 * shared by the Vite plugin and Nitro middleware. Plain ESM so `node --test`
 * and the Nitro bundler can both consume it.
 */
-var DEFAULT_APP_NAME = "Grok App";
+var DEFAULT_APP_NAME = "TrainUp";
 var OG_SITE_REL_PATH = "src/lib/og/site.json";
 var SHARE_META_KEYS = /* @__PURE__ */ new Set([
 	"og:title",
@@ -67,7 +67,7 @@ function appNameFromHost(hostHeader) {
 	if (!host.endsWith(".grok.me")) return DEFAULT_APP_NAME;
 	const slug = host.split(".")[0] ?? "";
 	if (!slug || slug === "www" || !/^[a-z0-9-]{1,63}$/.test(slug)) return DEFAULT_APP_NAME;
-	return slug.split("-").filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "Grok App";
+	return slug.split("-").filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "TrainUp";
 }
 /** True for Vercel system domains. Envoy rewrites origin Host to these; they SSO-protect `/og.jpg`. */
 function isVercelSystemHost(host) {
@@ -116,10 +116,11 @@ function stripInstallParams(url) {
 	return rest ? `${path}?${rest}` : path;
 }
 function renderInstallPageHtml(template, { host, url } = {}) {
-	return String(template).replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host))).replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
+	const appName = resolveOgTitle(readOgSite(), appNameFromHost(host), host);
+	return String(template).replaceAll("{{APP_NAME}}", escapeHtml(appName)).replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
 }
 function renderWebManifest(hostHeader) {
-	const name = appNameFromHost(hostHeader);
+	const name = resolveOgTitle(readOgSite(), appNameFromHost(hostHeader), hostHeader);
 	return JSON.stringify({
 		name,
 		short_name: name,
@@ -129,11 +130,25 @@ function renderWebManifest(hostHeader) {
 		display: "standalone",
 		background_color: "#000000",
 		theme_color: "#000000",
-		icons: [{
-			src: "/__grok/icon-180.png",
-			sizes: "180x180",
-			type: "image/png"
-		}]
+		icons: [
+			{
+				src: "/__grok/icon-180.png",
+				sizes: "180x180",
+				type: "image/png"
+			},
+			{
+				src: "/icon-192.png",
+				sizes: "192x192",
+				type: "image/png",
+				purpose: "any maskable"
+			},
+			{
+				src: "/icon-512.png",
+				sizes: "512x512",
+				type: "image/png",
+				purpose: "any maskable"
+			}
+		]
 	}, null, 2);
 }
 function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
@@ -218,8 +233,8 @@ function resolveOgTitle(site = {}, appName = DEFAULT_APP_NAME, host = "", docume
 	const fromDoc = String(documentTitle ?? "").trim();
 	if (fromDoc) return fromDoc;
 	const fromHost = appNameFromHost(host);
-	if (fromHost && fromHost !== "Grok App") return fromHost;
-	return String(appName ?? "").trim() || "Grok App";
+	if (fromHost && fromHost !== "TrainUp") return fromHost;
+	return String(appName ?? "").trim() || "TrainUp";
 }
 function siteHasCustomCard(site = {}) {
 	return String(site.card ?? "").toLowerCase() === "custom";
@@ -288,7 +303,7 @@ function normalizeHeadContext(ctx = {}) {
 	const cwd = ctx.cwd ?? process.cwd();
 	const site = applyCustomCardFromFs(ctx.site !== void 0 ? ctx.site : snapshotOgIdentity(cwd).site, cwd);
 	return {
-		appName: resolveOgTitle(site, ctx.appName ?? "Grok App", ctx.host ?? ""),
+		appName: resolveOgTitle(site, ctx.appName ?? "TrainUp", ctx.host ?? ""),
 		projectId: ctx.projectId ?? readGrokProjectId(),
 		creator: ctx.creator ?? readXCreator(),
 		creatorId: ctx.creatorId ?? readXCreatorId(),
@@ -301,7 +316,7 @@ function injectGrokPwaHead(html, ctx = {}) {
 	if (typeof html !== "string") return html;
 	const { site, projectId, creator, creatorId, host, cwd } = normalizeHeadContext(ctx);
 	const documentTitle = titleFromDocument(html);
-	const appName = resolveOgTitle(site, ctx.appName ?? "Grok App", host, documentTitle);
+	const appName = resolveOgTitle(site, ctx.appName ?? "TrainUp", host, documentTitle);
 	let next = stripShareMetaTags(html);
 	const missing = grokPwaHeadTags(appName).filter(([key]) => {
 		if (key === "manifest") return !next.includes("href=\"/__grok/manifest.webmanifest\"");

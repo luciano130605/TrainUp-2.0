@@ -3,10 +3,10 @@ import { L as string, N as number, P as object, R as union, j as literal } from 
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { _ as createFileRoute, d as Scripts, f as HeadContent, g as lazyRouteComponent, h as Outlet, m as createRouter, v as createRootRoute, x as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { n as auth } from "./server-BHRbO-e7.mjs";
+import { t as auth } from "./server-BHRbO-e7.mjs";
 import { r as TriangleAlert } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-BuA2sfQm.js
-var router_BuA2sfQm_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CvebyBgs.js
+var router_CvebyBgs_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var FALLBACK_MESSAGE = "An unexpected error occurred. Try reloading the page.";
@@ -300,7 +300,7 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
-var styles_default = "/assets/styles-CpMGll0s.css";
+var styles_default = "/assets/styles-CWNGnlym.css";
 var APP_NAME = "TrainUp";
 var THEME_BOOT = `(function(){try{var t=localStorage.getItem("trainup-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.setAttribute("data-theme","dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 var Route$4 = createRootRoute({
@@ -326,7 +326,7 @@ var Route$4 = createRootRoute({
 			},
 			{
 				name: "description",
-				content: "TrainUp — tu entrenamiento, claro y al grano."
+				content: "TrainUp: tus rutinas, pesos y progreso siempre a mano."
 			}
 		],
 		links: [
@@ -377,7 +377,7 @@ var Route$4 = createRootRoute({
 		})]
 	})
 });
-var $$splitComponentImporter$2 = () => import("./routes-DUNKRzV4.mjs");
+var $$splitComponentImporter$2 = () => import("./routes-Bryxag8y.mjs");
 var Route$3 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 /** Hard cap so a wedged storage read can never leave the splash up forever. */
 /**
@@ -388,9 +388,9 @@ var Route$3 = createFileRoute("/")({ component: lazyRouteComponent($$splitCompon
 * still lets the first client write clobber what was saved. `onFinishHydration`
 * fires on the real completion.
 */
-var $$splitComponentImporter$1 = () => import("./diagnostico-BQon5TAP.mjs");
+var $$splitComponentImporter$1 = () => import("./diagnostico-CtyBtElZ.mjs");
 var Route$2 = createFileRoute("/diagnostico")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
-var $$splitComponentImporter = () => import("./login-BXWR3Rg8.mjs");
+var $$splitComponentImporter = () => import("./login-BMFz7sNM.mjs");
 var Route$1 = createFileRoute("/login")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 var Route = createFileRoute("/api/auth/$")({ server: { handlers: {
 	GET: ({ request }) => auth.handler(request),
@@ -426,4 +426,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_BuA2sfQm_exports as t };
+export { getRouter, router_CvebyBgs_exports as t };

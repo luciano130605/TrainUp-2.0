@@ -1,17 +1,17 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
-import { r as signIn, t as authClient } from "./client-IWHfIGH2.mjs";
+import "./client-BjbFQbVA.mjs";
 import { b as useNavigate, y as Navigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { a as useCurrentUserState, n as cn, t as Mark } from "./mark-zNoHINay.mjs";
-import { t as GROK_PROVIDERS } from "./server-BHRbO-e7.mjs";
-import { t as Button } from "./button-BXLaTDzf.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/login-BXWR3Rg8.js
+import { a as useCurrentUserState, n as cn, t as Mark } from "./mark-SSOXUADh.mjs";
+import "./server-BHRbO-e7.mjs";
+import { t as Button } from "./button-D9xwQ7hg.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/login-BMFz7sNM.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function Login() {
 	const { user, isPending } = useCurrentUserState();
-	const navigate = useNavigate();
+	useNavigate();
 	const [mode, setMode] = (0, import_react.useState)("login");
 	const [email, setEmail] = (0, import_react.useState)("");
 	const [password, setPassword] = (0, import_react.useState)("");
@@ -23,46 +23,7 @@ function Login() {
 	async function submitEmail(e) {
 		e.preventDefault();
 		setError(null);
-		if (!email.trim() || password.length < 8) {
-			setError("Usá un email válido y una clave de al menos 8 caracteres.");
-			return;
-		}
-		setBusy(true);
-		try {
-			if (mode === "register") {
-				const { error: err } = await authClient.signUp.email({
-					email: email.trim(),
-					password,
-					name: name.trim() || email.split("@")[0] || "Atleta"
-				});
-				if (err) throw new Error(err.message || "No se pudo crear la cuenta");
-			} else {
-				const { error: err } = await authClient.signIn.email({
-					email: email.trim(),
-					password
-				});
-				if (err) throw new Error(err.message || "Email o clave incorrectos");
-			}
-			await authClient.getSession();
-			navigate({ to: "/" });
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Algo falló");
-		} finally {
-			setBusy(false);
-		}
-	}
-	async function social(providerId) {
-		setError(null);
-		setSocialBusy(providerId);
-		try {
-			await signIn(providerId, {
-				callbackURL: "/",
-				errorCallbackURL: "/login"
-			});
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "No se pudo entrar con esa red");
-			setSocialBusy(null);
-		}
+		setError("El acceso está desactivado.");
 	}
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "relative min-h-dvh bg-bg text-fg",
@@ -144,15 +105,9 @@ function Login() {
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-px flex-1 bg-line" })
 							]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "grid grid-cols-2 gap-2",
-							children: GROK_PROVIDERS.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-								type: "button",
-								variant: "secondary",
-								onClick: () => void social(p.providerId),
-								disabled: socialBusy !== null,
-								children: socialBusy === p.providerId ? "…" : p.label
-							}, p.providerId))
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-sm text-muted",
+							children: "El acceso con redes está desactivado."
 						})
 					]
 				})

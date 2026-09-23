@@ -34,6 +34,7 @@ const ejerciciosLocal: EjercicioLocal[] = [
   { id: "0006", nombre: "Tríceps con soga (Polea)", gif: "/gifs/triceps-con-soga.gif", parteDelCuerpo: "Triceps", subMusculos: [], equipamiento: "Polea" },
   { id: "0007", nombre: "Tríceps a un brazo (Polea)", subMusculos: [], gif: "/gifs/triceps-una-mano.gif", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
   { id: "0066", nombre: "Patada de triceps (Polea)", subMusculos: [], gif: "/gifs/patada-polea.jpg", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
+  { id: "0067", nombre: "Katana", subMusculos: [], gif: "/gifs/katana-polea.jpg", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
 
   /* biceps */
   { id: "0008", nombre: "Curl Z (Barra)", gif: "/gifs/curl-z.gif", parteDelCuerpo: "Biceps", equipamiento: "Barra", subMusculos: [] },
@@ -51,6 +52,7 @@ const ejerciciosLocal: EjercicioLocal[] = [
   { id: "0016", nombre: "Remo sentado - Agarre V (Maquina)", gif: "/gifs/remo-sentado-v.gif", parteDelCuerpo: "Espalda", equipamiento: "Maquinas", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"] },
   { id: "0056", nombre: "Remo sentado - Agarre abierto (Maquina)", gif: "/gifs/remo-sentado-abierto.jpg", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Maquinas" },
   { id: "0064", nombre: "Remo unilateral (Polea)", gif: "/gifs/remo-uni-polea.jpg", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Polea" },
+  { id: "0068", nombre: "Jalón al pecho con una sola mano", gif: "/gifs/jalon-una-mano-polea.jpg", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Polea" },
 
   /* cuadriceps */
   { id: "0017", nombre: "Sentadilla Hack (Maquina)", gif: "/gifs/sentadilla-hack.gif", parteDelCuerpo: "Cuadriceps", subMusculos: ["Gluteos", "Isquiotibiales"], equipamiento: "Maquinas" },

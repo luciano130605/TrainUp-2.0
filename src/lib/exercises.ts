@@ -585,6 +585,11 @@ function asEquipment(raw: string): Equipment {
   return EQUIPMENT_BY_TOKEN[normalizeToken(raw)] ?? "peso-corporal";
 }
 
+/** Removes duplicated equipment labels from catalogue names, e.g. "(Polea)". */
+function cleanExerciseName(raw: string) {
+  return raw.replace(/\s*\((?:barra|mancuernas?|maquina|maquinas|polea|peso|p\.?\s*corporal)\)\s*$/i, "").trim();
+}
+
 /**
  * Slots the owner's catalogue fills, laid over the curated defaults so a
  * movement keeps sensible sets/reps/rest instead of inventing them.
@@ -635,7 +640,7 @@ function fromLocal(ej: EjercicioLocal): Exercise {
   const rest = withCompoundRest(LOCAL_DEFAULTS[muscle]!, ej.nombre);
   return {
     id: `ex-${ej.id}`,
-    name: ej.nombre,
+    name: cleanExerciseName(ej.nombre),
     muscle,
     ...(secondary.length ? { secondary } : {}),
     equipment: asEquipment(ej.equipamiento),
@@ -653,7 +658,17 @@ export const LOCAL_EXERCISES: Exercise[] = ejerciciosLocal.map(fromLocal);
 
 // The owner's catalogue first: `getExercise` also falls back to index 0, and a
 // movement present in their gym is the more useful placeholder than a built-in.
-const ALL_EXERCISES: Exercise[] = [...LOCAL_EXERCISES, ...EXERCISES];
+function uniqueExercises(exercises: Exercise[]) {
+  const seen = new Set<string>();
+  return exercises.filter((exercise) => {
+    const key = `${normalizeToken(exercise.name)}|${exercise.muscle}|${exercise.equipment}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const ALL_EXERCISES: Exercise[] = uniqueExercises([...LOCAL_EXERCISES, ...EXERCISES]);
 const byId = new Map(ALL_EXERCISES.map((e) => [e.id, e]));
 
 export function getExercise(id: string): Exercise {

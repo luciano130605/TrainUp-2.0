@@ -20,7 +20,12 @@ export function TabBar({
   className?: string;
 }) {
   return (
-    <nav className={cn("z-20 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 safe-bottom", className)}>
+    <nav
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-30 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 shadow-[0_-16px_32px_rgb(0_0_0_/_0.18)] backdrop-blur safe-bottom",
+        className,
+      )}
+    >
       <ul className="grid grid-cols-5">
         {TAB_ITEMS.map((item) => {
           const active = tab === item.id;

@@ -19,7 +19,7 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#090a09" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "description", content: "TrainUp — tu entrenamiento, claro y al grano." },
+      { name: "description", content: "TrainUp: tus rutinas, pesos y progreso siempre a mano." },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

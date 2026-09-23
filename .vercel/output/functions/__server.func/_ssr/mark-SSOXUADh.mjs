@@ -1,9 +1,23 @@
-import { t as authClient } from "./client-IWHfIGH2.mjs";
+import "./client-BjbFQbVA.mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { n as clsx } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/mark-zNoHINay.js
+//#region node_modules/.nitro/vite/services/ssr/assets/mark-SSOXUADh.js
 var import_jsx_runtime = require_jsx_runtime();
+/**
+* Stable fallback user, used ONLY when auth is disabled
+* (`VITE_AUTH_ENABLED=false`, the shipped default). With auth on, the sandbox
+* live preview does real sign-in via the baked preview client. Its id is
+* `"dev-user"` — the SAME id `verify.server.ts` returns server-side — so per-user
+* rows written in that mode belong to one consistent owner.
+*/
+var DEV_USER = {
+	id: "dev-user",
+	displayName: "Dev User",
+	primaryEmail: "dev@example.com",
+	profileImageUrl: null,
+	isDevFallback: true
+};
 /**
 * Current user + loading state. Same behavior in live preview and when deployed:
 *   - Auth enabled -> the real signed-in user; `user` is `null` while
@@ -26,17 +40,9 @@ var import_jsx_runtime = require_jsx_runtime();
 * call keeps a stable hook order across every render of a given component.
 */
 function useCurrentUserState() {
-	const { data, isPending } = authClient.useSession();
-	const user = data?.user;
 	return {
-		user: user ? {
-			id: user.id,
-			displayName: user.name ?? null,
-			primaryEmail: user.email ?? null,
-			profileImageUrl: user.image ?? null,
-			isDevFallback: false
-		} : null,
-		isPending
+		user: DEV_USER,
+		isPending: false
 	};
 }
 /**

@@ -1,7 +1,7 @@
 import { r as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-CcvdN_gc.mjs";
-import { t as authMiddleware } from "./middleware-BCt81tep.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/data-DfDKVAHE.js
+import { t as authMiddleware } from "./middleware-wG7fM00R.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/data-DuqgW3LL.js
 function asJson(value, fallback) {
 	if (value == null) return fallback;
 	if (typeof value === "string") try {
