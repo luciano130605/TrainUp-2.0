@@ -21,8 +21,9 @@ export function TabBar({
 }) {
   return (
     <nav
+      aria-label="Navegación principal"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-30 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 shadow-[0_-16px_32px_rgb(0_0_0_/_0.18)] backdrop-blur safe-bottom",
+        "fixed inset-x-0 bottom-0 z-50 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 shadow-[0_-16px_32px_rgb(0_0_0_/_0.18)] backdrop-blur safe-bottom",
         className,
       )}
     >

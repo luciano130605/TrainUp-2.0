@@ -587,7 +587,12 @@ function asEquipment(raw: string): Equipment {
 
 /** Removes duplicated equipment labels from catalogue names, e.g. "(Polea)". */
 function cleanExerciseName(raw: string) {
-  return raw.replace(/\s*\((?:barra|mancuernas?|maquina|maquinas|polea|peso|p\.?\s*corporal)\)\s*$/i, "").trim();
+  return raw
+    .replace(
+      /\s*\((?:barra|mancuernas?|m[áa]quinas?|polea|peso|p\.?\s*corporal|kettlebell|banco)\)\s*$/i,
+      "",
+    )
+    .trim();
 }
 
 /**
@@ -661,7 +666,7 @@ export const LOCAL_EXERCISES: Exercise[] = ejerciciosLocal.map(fromLocal);
 function uniqueExercises(exercises: Exercise[]) {
   const seen = new Set<string>();
   return exercises.filter((exercise) => {
-    const key = `${normalizeToken(exercise.name)}|${exercise.muscle}|${exercise.equipment}`;
+    const key = `${normalizeToken(exercise.name)}|${exercise.equipment}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

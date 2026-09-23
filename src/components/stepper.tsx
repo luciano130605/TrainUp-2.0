@@ -60,7 +60,7 @@ export function Stepper({
       >
         <Minus className="size-4" />
       </button>
-      <div className="flex min-w-0 flex-1 flex-col items-center">
+      <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-center">
         {editing ? (
           <input
             ref={inputRef}
@@ -81,14 +81,15 @@ export function Stepper({
         ) : (
           <button
             type="button"
-            className="min-w-10 rounded px-1 font-display text-xl leading-none tabular-nums pressable"
+            className="flex h-full w-full min-w-0 flex-col items-center justify-center rounded px-1 pressable"
             onClick={() => setEditing(true)}
             aria-label={suffix ? `Editar ${shown} ${suffix}` : `Editar ${shown}`}
           >
-            {shown}
+            <span className="font-display text-xl leading-none tabular-nums">{shown}</span>
+            {suffix ? <span className="text-[10px] uppercase tracking-wider text-muted">{suffix}</span> : null}
           </button>
         )}
-        {suffix ? <span className="text-[10px] uppercase tracking-wider text-muted">{suffix}</span> : null}
+        {editing && suffix ? <span className="text-[10px] uppercase tracking-wider text-muted">{suffix}</span> : null}
       </div>
       <button
         type="button"

@@ -24,7 +24,7 @@ export function AppShell({
           <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-line bg-bg px-3 py-6 lg:flex">
             <div className="flex items-center gap-2 px-2">
               <Mark />
-              <span className="font-display text-2xl tracking-tight">TrainUp</span>
+              <span className="font-display text-2xl tracking-tight">GymUp</span>
             </div>
             <nav className="mt-8 flex flex-col gap-1">
               {TAB_ITEMS.map((item) => {

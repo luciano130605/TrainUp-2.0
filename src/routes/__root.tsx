@@ -3,7 +3,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "TrainUp";
+const APP_NAME = "GymUp";
 
 const THEME_BOOT = `(function(){try{var t=localStorage.getItem("trainup-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.setAttribute("data-theme","dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 
@@ -19,7 +19,7 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#090a09" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "description", content: "TrainUp: tus rutinas, pesos y progreso siempre a mano." },
+      { name: "description", content: "GymUp: tus rutinas, pesos y progreso siempre a mano." },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

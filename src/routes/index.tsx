@@ -143,7 +143,7 @@ function Home() {
       if (!s.settings.notifications) return;
       const due = routinesForToday(s.customRoutines);
       const name = due[0]?.name ?? "tu sesión de hoy";
-      fireWorkoutNotice("TrainUp", `Hoy toca ${name}`);
+      fireWorkoutNotice("GymUp", `Hoy toca ${name}`);
     }, wait);
     return () => window.clearTimeout(id);
   }, [userId, onboarded]);
@@ -183,7 +183,7 @@ function Home() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <main className="mx-auto min-h-0 w-full max-w-xl flex-1 overflow-y-auto px-5 pb-24 pt-8 safe-top lg:max-w-2xl lg:pb-8 lg:pt-10">
+          <main className="mx-auto min-h-0 w-full max-w-xl flex-1 overflow-y-auto px-5 pb-28 pt-8 safe-top lg:max-w-2xl lg:pb-8 lg:pt-10">
             {tab === "home" ? <HomeView /> : null}
             {tab === "train" ? <TrainView /> : null}
             {tab === "create" ? <CreateView /> : null}
