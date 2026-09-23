@@ -529,7 +529,6 @@ export const EXERCISES: Exercise[] = [
     id: "extension-katana",
     name: "Extensión katana",
     muscle: "triceps",
-    secondary: [],
     equipment: "polea",
     cues: [
       "Codo fijo",

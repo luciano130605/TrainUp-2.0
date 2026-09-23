@@ -22,7 +22,17 @@ export type EjercicioLocal = {
 };
 
 const ejerciciosLocal: EjercicioLocal[] = [
- 
+
+
+  { id: "0067", nombre: "Extensión katana", subMusculos: [], parteDelCuerpo: "Triceps", equipamiento: "Polea" },
+
+
+
+
+  { id: "0068", nombre: "Jalón al pecho unilateral", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Polea" },
+
 ];
 
 export default ejerciciosLocal;
+
+
