@@ -238,7 +238,7 @@ test("does not emit x:game:image without a public host or banner", () => {
 test("site title Grok App is a real name, not a sentinel", () => {
   const out = injectGrokPwaHead("<html><head></head></html>", {
     host: "wild-race.grok.me",
-    site: { title: "Grok App" },
+    site: { title: "TrainUp" },
   });
   assert.match(out, /property="og:title" content="Grok App"/);
 });

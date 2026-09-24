@@ -255,23 +255,6 @@ export function ProfileView() {
         </div>
       ) : null}
 
-      {confirmWipe ? (
-        <div className="space-y-2">
-          <p className="text-sm text-danger">Esto borra historial, PRs y el perfil de este dispositivo.</p>
-          <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={() => setConfirmWipe(false)}>
-              Cancelar
-            </Button>
-            <Button variant="danger" className="flex-1" onClick={resetAll}>
-              Borrar
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Button variant="ghost" block onClick={() => setConfirmWipe(true)}>
-          Borrar datos locales
-        </Button>
-      )}
     </div>
   );
 }
