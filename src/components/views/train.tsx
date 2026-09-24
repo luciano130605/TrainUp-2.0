@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Pencil, Search } from "lucide-react";
-import { COVER_SRC, filterRoutines } from "@/lib/routines";
+import { ChevronRight, Search } from "lucide-react";
+import { COVER_SRC } from "@/lib/routines";
 import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL, searchExercises } from "@/lib/exercises";
-import { LEVEL_LABEL, WEEKDAY_SHORT } from "@/lib/format";
+import { LEVEL_LABEL, WEEKDAY_FULL, WEEKDAY_SHORT } from "@/lib/format";
 import { useTrain } from "@/lib/store";
 import type { Muscle, Routine } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { isoWeekday } from "@/lib/notify";
 import { TimerView } from "./timer";
 import { Button } from "../ui/button";
 
@@ -27,21 +28,43 @@ const MUSCLES: Array<Muscle | "todos"> = [
 ];
 
 export function TrainView() {
-  const profile = useTrain((s) => s.profile);
   const extras = useTrain((s) => s.customRoutines);
   const startRoutine = useTrain((s) => s.startRoutine);
-  const deleteCustom = useTrain((s) => s.deleteCustomRoutine);
-  const [mode, setMode] = useState<"rutinas" | "timer">("rutinas");
-  const catalog = filterRoutines(profile.level);
+  const [mode, setMode] = useState<"rutinas" | "semana" | "timer">("rutinas");
+  const today = isoWeekday();
+
+  // Earliest scheduled day decides the position, so a Mon/Wed routine sits
+  // before a Tue-only one. Routines with no day land at the end, unscheduled.
+  const byDay = useMemo(
+    () =>
+      [...extras].sort((a, b) => {
+        const fa = (a.scheduleDays ?? []).length ? Math.min(...(a.scheduleDays ?? [])) : 99;
+        const fb = (b.scheduleDays ?? []).length ? Math.min(...(b.scheduleDays ?? [])) : 99;
+        return fa - fb || a.name.localeCompare(b.name, "es");
+      }),
+    [extras],
+  );
+
+  // Monday-first buckets: one per weekday, plus whatever has no day assigned.
+  const week = useMemo(
+    () =>
+      ([1, 2, 3, 4, 5, 6, 7] as const).map((day) => ({
+        day,
+        routines: byDay.filter((r) => (r.scheduleDays ?? []).includes(day)),
+      })),
+    [byDay],
+  );
+  const unscheduled = byDay.filter((r) => !(r.scheduleDays ?? []).length);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="pb-3">
         <h1 className="font-display text-4xl tracking-tight">Entrenar</h1>
-        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-surface p-1 shadow-[var(--shadow-border)]">
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-surface p-1 shadow-[var(--shadow-border)]">
           {(
             [
               ["rutinas", "Rutinas"],
+              ["semana", "Semana"],
               ["timer", "Timer"],
             ] as const
           ).map(([id, label]) => (
@@ -67,7 +90,7 @@ export function TrainView() {
               Todavía no tenés rutinas propias. Creá una y asignale un día: el inicio te avisa.
             </p>
           ) : (
-            extras.map((r) => (
+            byDay.map((r) => (
               <RoutineCard
                 key={r.id}
                 routine={r}
@@ -80,7 +103,80 @@ export function TrainView() {
               />
             ))
           )}
+        </div>
+      ) : null}
 
+      {mode === "semana" ? (
+        <div className="space-y-4 pb-8 stagger-in">
+          {extras.length === 0 ? (
+            <p className="text-sm text-muted">
+              Todavía no tenés rutinas propias. Creá una y asignale un día para verla acá.
+            </p>
+          ) : (
+            <>
+              {week.map(({ day, routines }) => (
+                <section key={day}>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-xl tracking-tight">
+                      {WEEKDAY_FULL[day - 1]}
+                    </h2>
+                    {day === today ? (
+                      <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent">
+                        Hoy
+                      </span>
+                    ) : null}
+                  </div>
+                  {routines.length === 0 ? (
+                    <p className="mt-1 text-xs text-muted">Descanso.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-2">
+                      {routines.map((r) => (
+                        <li key={r.id}>
+                          <button
+                            type="button"
+                            onClick={() => startRoutine(r)}
+                            className="flex w-full items-center justify-between rounded-xl bg-surface px-4 py-3 text-left shadow-[var(--shadow-border)] pressable"
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-medium">{r.name}</span>
+                              <span className="block truncate text-xs text-muted">
+                                {r.exercises.length} ejercicios · {r.durationMin} min
+                              </span>
+                            </span>
+                            <ChevronRight className="size-4 shrink-0 text-muted" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ))}
+              {unscheduled.length ? (
+                <section>
+                  <h2 className="font-display text-xl tracking-tight">Sin día</h2>
+                  <ul className="mt-2 space-y-2">
+                    {unscheduled.map((r) => (
+                      <li key={r.id}>
+                        <button
+                          type="button"
+                          onClick={() => startRoutine(r)}
+                          className="flex w-full items-center justify-between rounded-xl bg-surface px-4 py-3 text-left shadow-[var(--shadow-border)] pressable"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{r.name}</span>
+                            <span className="block truncate text-xs text-muted">
+                              Asignale un día al editarla
+                            </span>
+                          </span>
+                          <ChevronRight className="size-4 shrink-0 text-muted" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
 

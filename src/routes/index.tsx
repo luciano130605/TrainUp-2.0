@@ -143,7 +143,7 @@ function Home() {
       if (!s.settings.notifications) return;
       const due = routinesForToday(s.customRoutines);
       const name = due[0]?.name ?? "tu sesión de hoy";
-      fireWorkoutNotice("GymUp", `Hoy toca ${name}`);
+      fireWorkoutNotice("TrainUp", `Hoy toca ${name}`);
     }, wait);
     return () => window.clearTimeout(id);
   }, [userId, onboarded]);

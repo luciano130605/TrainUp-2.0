@@ -96,8 +96,22 @@ export const GENDER_LABEL: Record<Gender, string> = {
 
 export const WEEKDAY_SHORT = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
 
+export const WEEKDAY_FULL = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+] as const;
+
 export function weekdayShort(iso: number) {
   return WEEKDAY_SHORT[(iso - 1 + 7) % 7] ?? "";
+}
+
+export function weekdayFull(iso: number) {
+  return WEEKDAY_FULL[(iso - 1 + 7) % 7] ?? "";
 }
 
 export function firstName(name: string) {
