@@ -1,6 +1,7 @@
 import { Activity, CirclePlus, Dumbbell, House, PlusSquare, User } from "lucide-react";
 import type { Tab } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useKeyboardOpen } from "@/lib/keyboard";
 
 export const TAB_ITEMS: { id: Tab; label: string; icon: typeof House }[] = [
   { id: "home", label: "Inicio", icon: House },
@@ -19,11 +20,16 @@ export function TabBar({
   onChange: (tab: Tab) => void;
   className?: string;
 }) {
+  // The on-screen keyboard covers the bar instead of moving it. Hiding it while
+  // typing keeps the input the athlete is editing visible.
+  const typing = useKeyboardOpen();
+
   return (
     <nav
       aria-label="Navegación principal"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 pb-1 shadow-[0_-16px_32px_rgb(0_0_0_/_0.18)] backdrop-blur safe-bottom",
+        "tab-bar-fixed z-50 shrink-0 border-t border-line bg-surface/95 px-2 pt-1 shadow-[0_-16px_32px_rgb(0_0_0_/_0.18)] backdrop-blur transition-transform duration-200",
+        typing && "pointer-events-none translate-y-full",
         className,
       )}
     >

@@ -130,6 +130,9 @@ export function SessionView() {
           {exercise.cues.length ? (
             <p className="mt-3 text-sm text-muted">{exercise.cues.join(" · ")}</p>
           ) : null}
+          <p className="mt-2 text-xs text-muted">
+            Tocá el peso para escribirlo directamente, o usá − / +.
+          </p>
 
           {exercise.gif ? (
             <GifPlate src={exercise.gif} name={exercise.name} />

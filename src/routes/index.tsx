@@ -183,7 +183,7 @@ function Home() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <main className="mx-auto min-h-0 w-full max-w-xl flex-1 overflow-y-auto px-5 pb-28 pt-8 safe-top lg:max-w-2xl lg:pb-8 lg:pt-10">
+          <main className="mx-auto min-h-0 w-full max-w-xl flex-1 overflow-y-auto px-5 pt-8 pb-6 safe-top tab-bar-pad lg:max-w-2xl lg:pb-8 lg:pt-10">
             {tab === "home" ? <HomeView /> : null}
             {tab === "train" ? <TrainView /> : null}
             {tab === "create" ? <CreateView /> : null}

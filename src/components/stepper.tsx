@@ -27,16 +27,26 @@ export function Stepper({
   }, [editing, shown]);
 
   useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
+    if (!editing) return;
+    const input = inputRef.current;
+    if (!input) return;
+    // Focus in a rAF so iOS has already laid the input out before we select;
+    // selecting too early leaves the caret collapsed and the keyboard closed.
+    const raf = window.requestAnimationFrame(() => {
+      input.focus();
+      input.select();
+    });
+    return () => window.cancelAnimationFrame(raf);
   }, [editing]);
 
   function commitDraft() {
-    const normalized = draft.trim().replace(",", ".");
+    // Accept "80,5", "80.5", "80 kg" and stray spaces: an athlete typing the
+    // load should never see it silently rejected.
+    const normalized = draft.trim().replace(",", ".").replace(/[^0-9.]/g, "");
     const parsed = Number(normalized);
-    if (Number.isFinite(parsed)) onChange(Math.max(min, Math.round(parsed * 10) / 10));
+    if (normalized && Number.isFinite(parsed)) {
+      onChange(Math.max(min, Math.round(parsed * 10) / 10));
+    }
     setEditing(false);
   }
 
@@ -65,8 +75,11 @@ export function Stepper({
           <input
             ref={inputRef}
             value={draft}
+            type="text"
             inputMode="decimal"
-            aria-label={suffix ? `Cargar ${suffix}` : "Cargar valor"}
+            enterKeyHint="done"
+            autoComplete="off"
+            aria-label={suffix ? `Escribir ${suffix}` : "Escribir valor"}
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commitDraft}
             onKeyDown={(e) => {

@@ -1,5 +1,4 @@
 import type { Exercise, Muscle, Equipment } from "./types";
-import ejerciciosLocal, { type EjercicioLocal } from "./exercises-local";
 
 export const MUSCLE_LABEL: Record<Muscle, string> = {
   pecho: "Pecho",
@@ -33,6 +32,10 @@ export function isLegMuscle(muscle: Muscle) {
   return LEG_SUB_MUSCLES.has(muscle);
 }
 
+/**
+ * Equipment shown under the exercise name, on its own line. Kept deliberately
+ * short so it reads as a tag ("Espalda · Máquina"), not a sentence.
+ */
 export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   barra: "Barra",
   mancuernas: "Mancuernas",
@@ -41,7 +44,7 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   kettlebell: "Kettlebell",
   polea: "Polea",
   banco: "Banco",
-  smith: "Smith"
+  smith: "Máquina Smith",
 };
 
 export const EXERCISES: Exercise[] = [
@@ -302,7 +305,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: "laterales.polea",
-    name: "Elevaciones laterales",
+    name: "Elevaciones laterales en polea",
     muscle: "hombros",
     equipment: "polea",
     cues: ["Meñique levemente arriba", "Sin trapecio", "Control al bajar"],
@@ -418,7 +421,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: "peso-muerto-smith",
-    name: "Peso muerto",
+    name: "Peso muerto en Smith",
     muscle: "isquiotibiales",
     secondary: ["gluteos", "espalda"],
     equipment: "smith",
@@ -670,7 +673,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: "remo-erg",
-    name: "Remo máquina cardio",
+    name: "Remo ergómetro",
     muscle: "cardio",
     equipment: "maquina",
     cues: ["Piernas-torso-brazos", "Ritmo constante", "No encorvar"],
@@ -712,6 +715,29 @@ export const EXERCISES: Exercise[] = [
     defaultSets: 3,
     defaultReps: 12,
     restSec: 60,
+    compound: true,
+  },
+  {
+    id: "gemelos-sentado",
+    name: "Elevación de gemelos sentado",
+    muscle: "gemelos",
+    equipment: "maquina",
+    cues: ["Rodillas bajo la almohadilla", "Pausa arriba", "Estirá abajo sin rebotar"],
+    defaultSets: 4,
+    defaultReps: 15,
+    restSec: 45,
+    compound: false,
+  },
+  {
+    id: "press-hombro-mancuernas",
+    name: "Press de hombros con mancuernas",
+    muscle: "hombros",
+    secondary: ["triceps"],
+    equipment: "mancuernas",
+    cues: ["Muñecas sobre el codo", "Costillas abajo", "Sin impulso"],
+    defaultSets: 3,
+    defaultReps: 10,
+    restSec: 90,
     compound: true,
   },
 ];
@@ -761,127 +787,49 @@ const MUSCLE_BY_TOKEN: Record<string, Muscle> = {
   femoral: "isquiotibiales",
 };
 
-/** Best-effort mapping from the catalogue's free-text body part to a muscle. */
-function asMuscle(raw: string): Muscle {
-  return MUSCLE_BY_TOKEN[normalizeToken(raw)] ?? "core";
-}
-
-/** Same, but returns undefined for entries the catalogue leaves empty. */
-function asOptionalMuscle(raw: string): Muscle | undefined {
-  const token = normalizeToken(raw);
-  if (!token) return undefined;
-  return MUSCLE_BY_TOKEN[token];
-}
-
-const EQUIPMENT_BY_TOKEN: Record<string, Equipment> = {
-  barra: "barra",
-  mancuerna: "mancuernas",
-  mancuernas: "mancuernas",
-  maquina: "maquina",
-  maquinas: "maquina",
-  smith: "maquina",
-  polea: "polea",
-  "p corporal": "peso-corporal",
-  "peso corporal": "peso-corporal",
-  corporal: "peso-corporal",
-  kettlebell: "kettlebell",
-  banco: "banco",
-};
-
-function asEquipment(raw: string): Equipment {
-  return EQUIPMENT_BY_TOKEN[normalizeToken(raw)] ?? "peso-corporal";
-}
-
-/** Removes duplicated equipment labels from catalogue names, e.g. "(Polea)". */
-function cleanExerciseName(raw: string) {
-  return raw
-    .replace(
-      /\s*\((?:barra|mancuernas?|m[áa]quinas?|polea|peso|p\.?\s*corporal|kettlebell|banco)\)\s*$/i,
-      "",
-    )
-    .trim();
+/** Maps free-text body parts (search aliases) onto the app's muscle ids. */
+export function muscleFromToken(raw: string): Muscle | undefined {
+  return MUSCLE_BY_TOKEN[normalizeToken(raw)];
 }
 
 /**
- * Slots the owner's catalogue fills, laid over the curated defaults so a
- * movement keeps sensible sets/reps/rest instead of inventing them.
+ * Collapses a movement to a comparable key so the same exercise can't be
+ * listed twice: the equipment is part of the key (the app renders it on its own
+ * line, so "Press de banca" and "Press de banca (Barra)" are one row) and the
+ * name is normalised so accents/punctuation do not split a duplicate.
  */
-const LOCAL_DEFAULTS: Record<string, { sets: number; reps: number; restSec: number; compound: boolean }> = {
-  pecho: { sets: 4, reps: 8, restSec: 120, compound: true },
-  espalda: { sets: 4, reps: 10, restSec: 90, compound: true },
-  hombros: { sets: 3, reps: 12, restSec: 60, compound: false },
-  biceps: { sets: 3, reps: 10, restSec: 60, compound: false },
-  triceps: { sets: 3, reps: 12, restSec: 45, compound: false },
-  cuadriceps: { sets: 4, reps: 8, restSec: 120, compound: true },
-  isquiotibiales: { sets: 3, reps: 12, restSec: 60, compound: false },
-  gemelos: { sets: 4, reps: 12, restSec: 45, compound: false },
-  gluteos: { sets: 3, reps: 10, restSec: 90, compound: true },
-  aductores: { sets: 3, reps: 12, restSec: 45, compound: false },
-  abductores: { sets: 3, reps: 12, restSec: 45, compound: false },
-  core: { sets: 3, reps: 12, restSec: 45, compound: false },
-  cardio: { sets: 3, reps: 10, restSec: 45, compound: true },
-  piernas: { sets: 3, reps: 10, restSec: 90, compound: true },
-};
-
-/** Compound movements deserve a longer rest than the isolation default. */
-function withCompoundRest(
-  base: { sets: number; reps: number; restSec: number; compound: boolean },
-  name: string,
-) {
-  const t = normalizeToken(name);
-  const isCompound =
-    t.includes("sentadilla") ||
-    t.includes("prensa") ||
-    t.includes("peso muerto") ||
-    t.includes("press de banca") ||
-    t.includes("remo") ||
-    t.includes("jalon") ||
-    t.includes("estocadas") ||
-    t.includes("elevacion de cadera") ||
-    t.includes("step up");
-  if (!isCompound) return base;
-  return { ...base, compound: true, restSec: Math.max(base.restSec, 120) };
+function exerciseKey(name: string, equipment: Equipment) {
+  return `${normalizeToken(name)}|${equipment}`;
 }
 
-/** Turns one catalogue row into the app's `Exercise` shape. */
-function fromLocal(ej: EjercicioLocal): Exercise {
-  const muscle = asMuscle(ej.parteDelCuerpo);
-  const secondary = Array.from(
-    new Set(ej.subMusculos.map(asOptionalMuscle).filter((m): m is Muscle => Boolean(m && m !== muscle))),
-  );
-  const rest = withCompoundRest(LOCAL_DEFAULTS[muscle]!, ej.nombre);
-  return {
-    id: `ex-${ej.id}`,
-    name: cleanExerciseName(ej.nombre),
-    muscle,
-    ...(secondary.length ? { secondary } : {}),
-    equipment: asEquipment(ej.equipamiento),
-    cues: [],
-    defaultSets: rest.sets,
-    defaultReps: ej.esTiempo ? 45 : rest.reps,
-    restSec: rest.restSec,
-    compound: rest.compound,
-    ...(ej.gif ? { gif: ej.gif } : {}),
-    ...(ej.esTiempo ? { esTiempo: true } : {}),
-  };
+/**
+ * Merges entries that describe the same movement on the same equipment. The
+ * first one wins — the list is ordered so the richer, curated entry lands
+ * first — and the survivor absorbs any demonstration clip the duplicate had.
+ */
+function dedupeExercises(exercises: Exercise[]) {
+  const seenId = new Set<string>();
+  const seenKey = new Set<string>();
+  const out: Exercise[] = [];
+
+  for (const exercise of exercises) {
+    if (seenId.has(exercise.id)) continue;
+    const key = exerciseKey(exercise.name, exercise.equipment);
+    const previous = out.find((e) => exerciseKey(e.name, e.equipment) === key);
+    if (previous) {
+      if (!previous.gif && exercise.gif) previous.gif = exercise.gif;
+      if (!previous.cues.length && exercise.cues.length) previous.cues = exercise.cues;
+      continue;
+    }
+    seenId.add(exercise.id);
+    seenKey.add(key);
+    out.push(exercise);
+  }
+
+  return out;
 }
 
-export const LOCAL_EXERCISES: Exercise[] = ejerciciosLocal.map(fromLocal);
-
-function uniqueExercises(exercises: Exercise[]) {
-  const seen = new Set<string>();
-
-  return exercises.filter((exercise) => {
-    if (seen.has(exercise.id)) return false;
-
-    seen.add(exercise.id);
-    return true;
-  });
-}
-export const ALL_EXERCISES = uniqueExercises([
-  ...LOCAL_EXERCISES,
-  ...EXERCISES,
-]);
+export const ALL_EXERCISES: Exercise[] = dedupeExercises(EXERCISES);
 
 const byId = new Map(ALL_EXERCISES.map((e) => [e.id, e]));
 
@@ -890,22 +838,30 @@ export function getExercise(id: string): Exercise {
 }
 
 /**
- * Search across both catalogues. The owner's list is listed first so the
- * movements actually present in their gym lead the results.
+ * Search the catalogue by name, with a muscle filter. Also matches the search
+ * alias for a body part ("dorsal", "femoral") so older free-text habits still
+ * land on the right movements.
  */
 export function searchExercises(
   query: string,
   muscle: Muscle | "todos" = "todos",
 ) {
   const q = normalizeToken(query);
+  const aliasMuscle = q ? muscleFromToken(q) : undefined;
 
-  return ALL_EXERCISES.filter((ex) => {
-    const matchesQuery =
-      !q || normalizeToken(ex.name).includes(q);
+  const matches = (ex: Exercise) => {
+    if (muscle !== "todos" && ex.muscle !== muscle) return false;
+    if (!q) return true;
+    if (aliasMuscle) return ex.muscle === aliasMuscle || ex.secondary?.includes(aliasMuscle);
+    return normalizeToken(ex.name).includes(q);
+  };
 
-    const matchesMuscle =
-      muscle === "todos" || ex.muscle === muscle;
-
-    return matchesQuery && matchesMuscle;
+  // Movements led by the queried muscle come first, so the list reads in the
+  // order an athlete trains rather than the order the catalogue was typed in.
+  const hits = ALL_EXERCISES.filter(matches);
+  if (!aliasMuscle) return hits;
+  return hits.sort((a, b) => {
+    const rank = (ex: Exercise) => (ex.muscle === aliasMuscle ? 0 : 1);
+    return rank(a) - rank(b);
   });
 }

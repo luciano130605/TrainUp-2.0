@@ -1,35 +1,38 @@
 /**
- * Checks the owner's catalogue survives normalisation: every row must come out
- * with a valid muscle, equipment and usable default sets. Run with
+ * Checks the exercise catalogue survives de-duplication: every row must come
+ * out with a valid muscle, equipment and usable default sets, and no two rows
+ * may describe the same movement on the same equipment. Run with
  * `npx tsx scripts/check-local-exercises.mjs`.
  */
-import { LOCAL_EXERCISES, EQUIPMENT_LABEL, MUSCLE_LABEL } from "../src/lib/exercises.ts";
-import local from "../src/lib/exercises-local.ts";
+import { ALL_EXERCISES, EXERCISES, EQUIPMENT_LABEL, MUSCLE_LABEL } from "../src/lib/exercises.ts";
 
 const problems = [];
 
-if (LOCAL_EXERCISES.length !== local.length) {
-  problems.push(`count mismatch: ${LOCAL_EXERCISES.length} vs ${local.length}`);
+if (ALL_EXERCISES.length > EXERCISES.length) {
+  problems.push(`duplicates survived: ${ALL_EXERCISES.length} vs ${EXERCISES.length}`);
 }
 
 const byMuscle = {};
-for (const ex of LOCAL_EXERCISES) {
-  const src = ex.id.replace(/^ex-/, "");
-  if (!MUSCLE_LABEL[ex.muscle]) problems.push(`${src} bad muscle ${ex.muscle}`);
-  if (!EQUIPMENT_LABEL[ex.equipment]) problems.push(`${src} bad equipment ${ex.equipment}`);
-  if (!ex.defaultSets || !ex.defaultReps) problems.push(`${src} missing defaults`);
-  if (!ex.gif) problems.push(`${src} lost its gif`);
+const seen = new Map();
+for (const ex of ALL_EXERCISES) {
+  if (!MUSCLE_LABEL[ex.muscle]) problems.push(`${ex.id} bad muscle ${ex.muscle}`);
+  if (!EQUIPMENT_LABEL[ex.equipment]) problems.push(`${ex.id} bad equipment ${ex.equipment}`);
+  if (!ex.defaultSets || !ex.defaultReps) problems.push(`${ex.id} missing defaults`);
+  if (/(barra|mancuernas?|m[aá]quinas?|polea|kettlebell|banco)\)\s*$/i.test(ex.name)) {
+    problems.push(`${ex.id} still carries equipment in the name: ${ex.name}`);
+  }
+  const key = `${ex.name}|${ex.equipment}`;
+  if (seen.has(key)) problems.push(`${ex.id} duplicates ${seen.get(key)} (${key})`);
+  else seen.set(key, ex.id);
   byMuscle[ex.muscle] = (byMuscle[ex.muscle] ?? 0) + 1;
 }
 
-// Every muscle the catalogue declares must be representable.
-for (const raw of new Set(local.map((e) => e.parteDelCuerpo))) {
-  const hit = LOCAL_EXERCISES.find((e) => raw && e.name === local.find((l) => l.parteDelCuerpo === raw)?.nombre);
-  if (!hit) problems.push(`body part unmapped: ${raw}`);
+// The two movements the owner asked for must be present and reachable.
+for (const id of ["extension-katana", "jalon-uni"]) {
+  if (!ALL_EXERCISES.some((e) => e.id === id)) problems.push(`missing exercise: ${id}`);
 }
 
-console.log("total:", LOCAL_EXERCISES.length);
+console.log("total:", ALL_EXERCISES.length);
 console.log("por músculo:", JSON.stringify(byMuscle, null, 0));
-console.log("plancha esTiempo:", LOCAL_EXERCISES.find((e) => e.esTiempo)?.name ?? "NINGUNA");
 console.log("problemas:", problems.length ? problems : "ninguno");
 process.exit(problems.length ? 1 : 0);

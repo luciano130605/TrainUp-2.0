@@ -203,13 +203,13 @@ export function Library({
               onClick={() => onPick(ex.id)}
               className="flex w-full items-center justify-between rounded-xl bg-surface px-4 py-3 text-left shadow-[var(--shadow-border)] pressable"
             >
-              <span>
-                <span className="block font-medium">{ex.name}</span>
-                <span className="text-xs text-muted">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{ex.name}</span>
+                <span className="block truncate text-xs text-muted">
                   {MUSCLE_LABEL[ex.muscle]} · {EQUIPMENT_LABEL[ex.equipment]}
                 </span>
               </span>
-              <span className="text-xs tabular-nums text-muted">
+              <span className="shrink-0 pl-3 text-xs tabular-nums text-muted">
                 {ex.defaultSets}×{ex.defaultReps}
               </span>
             </button>

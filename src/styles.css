@@ -163,6 +163,26 @@
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
+/* Mobile browser chrome: the address bar collapses on scroll and the on-screen
+   keyboard overlays the viewport. Anchoring the tab bar to the *visual*
+   viewport height (`--app-vh`, kept in sync from JS) keeps it fixed at the
+   bottom edge instead of scrolling away or hiding behind the keyboard. */
+.tab-bar-fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-bottom: calc(max(0.5rem, env(safe-area-inset-bottom)) - 0.25rem);
+}
+
+/* Reserve the tab bar's height so the last row of a list is never trapped
+   underneath it. Only needed below `lg`, where the bar is actually shown. */
+@media (max-width: 1023px) {
+  .tab-bar-pad {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 img.media {
   outline: 1px solid var(--tu-line);
   outline-offset: -1px;

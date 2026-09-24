@@ -24,7 +24,7 @@ export type Equipment =
   | "mancuernas"
   | "maquina"
   | "peso-corporal"
-  |"smith"
+  | "smith"
   | "kettlebell"
   | "polea"
   | "banco";
