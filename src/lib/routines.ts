@@ -34,6 +34,7 @@ export const ROUTINES: Routine[] = [
     exercises: [
       { exerciseId: "peso-muerto", sets: 3, reps: 5, restSec: 180 },
       { exerciseId: "dominadas", sets: 4, reps: 6, restSec: 150 },
+      { exerciseId: "remo-sentado-maquina", sets: 3, reps: 10, restSec: 90 },
       { exerciseId: "remo-barra", sets: 4, reps: 8, restSec: 120 },
       { exerciseId: "jalon", sets: 3, reps: 10, restSec: 90 },
       { exerciseId: "face-pull", sets: 3, reps: 15, restSec: 45 },
@@ -68,6 +69,7 @@ export const ROUTINES: Routine[] = [
       { exerciseId: "remo-barra", sets: 4, reps: 8, restSec: 120 },
       { exerciseId: "press-militar", sets: 3, reps: 6, restSec: 120 },
       { exerciseId: "jalon", sets: 3, reps: 10, restSec: 90 },
+      { exerciseId: "remo-sentado-maquina", sets: 3, reps: 10, restSec: 90 },
       { exerciseId: "laterales", sets: 3, reps: 12, restSec: 45 },
       { exerciseId: "curl-martillo", sets: 2, reps: 10, restSec: 45 },
     ],

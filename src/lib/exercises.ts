@@ -185,6 +185,25 @@ export const EXERCISES: Exercise[] = [
     compound: true,
   },
   {
+    id: "remo-sentado-maquina",
+    name: "Remo sentado en máquina",
+    muscle: "espalda",
+    secondary: ["biceps", "hombros"],
+    equipment: "maquina",
+    cues: [
+      "Pecho apoyado en el soporte",
+      "Espalda neutra",
+      "Tirá con los codos hacia atrás",
+      "Juntá las escápulas al final",
+      "Volvé controlando sin soltar el peso"
+    ],
+    defaultSets: 3,
+    defaultReps: 10,
+    restSec: 90,
+    compound: true,
+    gif: "/media/remo-sentado-maquina.png",
+  },
+  {
     id: "remo-unilateral",
     name: "Remo unilateral",
     muscle: "espalda",

@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Plus, Replace, X } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  Plus,
+  Replace,
+  Timer,
+  X,
+} from "lucide-react";
 import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL } from "@/lib/exercises";
 import {
   formatClock,
@@ -10,6 +22,7 @@ import {
   weightStep,
 } from "@/lib/format";
 import { useTrain } from "@/lib/store";
+import type { WorkoutSet } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { chime, pulse } from "@/lib/audio";
 import { isLowPowerDevice } from "@/lib/low-power";
@@ -34,7 +47,10 @@ export function SessionView() {
   const discard = useTrain((s) => s.discardSession);
   const keepAwake = useTrain((s) => s.settings.keepAwake);
   const [now, setNow] = useState(Date.now());
+  /** Seconds left on the rest timer when it was paused by hand, else null. */
+  const [pausedRest, setPausedRest] = useState<number | null>(null);
   const [picker, setPicker] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [rang, setRang] = useState(false);
 
@@ -57,6 +73,19 @@ export function SessionView() {
     };
   }, [keepAwake]);
 
+  const currentIndex = session?.currentIndex ?? 0;
+
+  // Each new exercise opens collapsed: the sets are what you touch mid-workout,
+  // the technique notes are one tap away.
+  useEffect(() => {
+    setShowDetail(false);
+  }, [currentIndex]);
+
+  // A rest period that starts or ends on its own clears any manual pause.
+  useEffect(() => {
+    if (!session?.restUntil) setPausedRest(null);
+  }, [session?.restUntil]);
+
   useEffect(() => {
     if (!session?.restUntil) {
       setRang(false);
@@ -74,39 +103,78 @@ export function SessionView() {
 
   const current = session.exercises[session.currentIndex]!;
   const exercise = getExercise(current.exerciseId);
-  const remaining = session.restUntil ? Math.max(0, (session.restUntil - now) / 1000) : 0;
+  const countdown = session.restUntil ? Math.max(0, (session.restUntil - now) / 1000) : 0;
+  const remaining = pausedRest != null ? pausedRest : countdown;
   const resting = remaining > 0;
   const doneSets = session.exercises.reduce((n, ex) => n + ex.sets.filter((s) => s.completed).length, 0);
   const totalSets = session.exercises.reduce((n, ex) => n + ex.sets.length, 0);
   const elapsed = now - session.startedAt;
+  const nextIndex = session.exercises.findIndex(
+    (ex, i) => i > session.currentIndex && ex.sets.some((st) => !st.completed),
+  );
+  const nextExercise = nextIndex >= 0 ? getExercise(session.exercises[nextIndex]!.exerciseId) : undefined;
+  const currentDone = current.sets.filter((st) => st.completed).length;
+  const openSet = current.sets.find((st) => !st.completed);
+  const nextUp = openSet ? `${formatWeight(openSet.weightKg, unit)} × ${openSet.reps}` : nextExercise?.name;
+
+  function pauseRest() {
+    setPausedRest(countdown);
+  }
+
+  function resumeRest() {
+    if (pausedRest == null) return;
+    // `addRest` shifts the deadline by a delta, so feed it the gap between what
+    // was left when we paused and what is left now (0 once it stopped ticking).
+    addRest(pausedRest - countdown);
+    setPausedRest(null);
+  }
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col bg-bg">
-      <header className="flex items-center gap-2 px-4 pt-12 pb-3">
+      <header className="flex shrink-0 items-center gap-2 border-b border-line px-4 pb-3 pt-8 safe-top">
         <button
           type="button"
-          className="flex size-11 items-center justify-center rounded-lg text-muted pressable"
+          className="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-muted pressable"
           onClick={() => setConfirm(true)}
           aria-label="Cerrar sesión"
         >
           <X className="size-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs uppercase tracking-[0.18em] text-muted">{session.routineName}</p>
-          <p className="text-sm tabular-nums text-fg">
-            {formatDuration(elapsed)} · {doneSets}/{totalSets}
+          <p className="truncate text-[11px] uppercase tracking-[0.18em] text-muted">
+            {session.routineName}
           </p>
+          <p className="font-display text-lg leading-tight tabular-nums">
+            {formatDuration(elapsed)}
+            <span className="ml-2 font-sans text-xs text-muted">
+              {doneSets}/{totalSets} series
+            </span>
+          </p>
+          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-elevated">
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-200"
+              style={{ width: `${(doneSets / Math.max(1, totalSets)) * 100}%` }}
+            />
+          </div>
         </div>
-        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-elevated">
-          <div
-            className="h-full bg-accent transition-[width] duration-200"
-            style={{ width: `${(doneSets / Math.max(1, totalSets)) * 100}%` }}
-          />
-        </div>
+        {resting ? (
+          <button
+            type="button"
+            onClick={() => (pausedRest != null ? resumeRest() : pauseRest())}
+            aria-label={pausedRest != null ? "Reanudar descanso" : "Pausar descanso"}
+            className={cn(
+              "flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 font-display text-lg leading-none tabular-nums pressable",
+              pausedRest != null ? "bg-elevated text-muted" : "bg-accent/15 text-accent",
+            )}
+          >
+            {pausedRest != null ? <Play className="size-4" /> : <Pause className="size-4" />}
+            {formatClock(remaining)}
+          </button>
+        ) : null}
       </header>
 
       {picker ? (
-        <div className="min-h-0 flex-1 overflow-y-auto px-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-4 safe-bottom">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-2xl">Sustituir</h2>
             <Button variant="ghost" size="sm" onClick={() => setPicker(false)}>
@@ -122,77 +190,97 @@ export function SessionView() {
           />
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          <p className="text-xs uppercase tracking-[0.18em] text-accent">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-36 pt-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-accent">
             {MUSCLE_LABEL[exercise.muscle]} · {EQUIPMENT_LABEL[exercise.equipment]}
           </p>
-          <h1 className="mt-1 font-display text-5xl leading-none tracking-tight">{exercise.name}</h1>
-          {exercise.cues.length ? (
-            <p className="mt-3 text-sm text-muted">{exercise.cues.join(" · ")}</p>
-          ) : null}
-          <p className="mt-2 text-xs text-muted">
-            Tocá el peso para escribirlo directamente, o usá − / +.
-          </p>
+          <h1 className="mt-1 font-display text-4xl leading-none tracking-tight sm:text-5xl">
+            {exercise.name}
+          </h1>
 
-          {exercise.gif ? (
-            <GifPlate src={exercise.gif} name={exercise.name} />
-          ) : null}
-
-          <ul className="mt-6 space-y-2">
-            {current.sets.map((st, i) => (
-              <li
-                key={st.id}
-                className={cn(
-                  "rounded-xl px-3 py-2 shadow-[var(--shadow-border)]",
-                  st.completed ? "bg-elevated/70" : "bg-surface",
-                )}
+          {exercise.cues.length || exercise.gif ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowDetail((v) => !v)}
+                aria-expanded={showDetail}
+                className="-ml-2 mt-1 flex h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted pressable"
               >
-                <div className="flex items-center gap-2">
-                  <span className="w-6 text-center font-display text-lg tabular-nums text-muted">{i + 1}</span>
-                  <Stepper
-                    value={toDisplayWeight(st.weightKg, unit)}
-                    step={weightStep(unit)}
-                    suffix={unit}
-                    wide
-                    onChange={(n) =>
-                      updateSet(session.currentIndex, st.id, { weightKg: fromDisplayWeight(n, unit) })
-                    }
-                  />
-                  <Stepper
-                    value={st.reps}
-                    step={1}
-                    min={0}
-                    suffix={exercise.esTiempo ? "seg" : "reps"}
-                    onChange={(n) => updateSet(session.currentIndex, st.id, { reps: Math.max(0, Math.round(n)) })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => toggleSet(session.currentIndex, st.id)}
-                    className={cn(
-                      "flex size-12 shrink-0 items-center justify-center rounded-lg pressable",
-                      st.completed ? "bg-accent text-accent-fg" : "bg-elevated text-muted",
-                    )}
-                    aria-label={st.completed ? "Desmarcar serie" : "Completar serie"}
-                  >
-                    <Check className="size-5" />
-                  </button>
+                {exercise.gif ? "Técnica y referencia" : "Indicaciones"}
+                <ChevronDown className={cn("size-4 transition-transform", showDetail && "rotate-180")} />
+              </button>
+              {showDetail ? (
+                <div className="pb-1">
+                  {exercise.gif ? <MediaPlate src={exercise.gif} name={exercise.name} /> : null}
+                  {exercise.cues.length ? (
+                    <ul className="mt-3 space-y-1.5">
+                      {exercise.cues.map((cue) => (
+                        <li key={cue} className="flex gap-2 text-sm text-muted">
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent/70" />
+                          {cue}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
-              </li>
+              ) : null}
+            </>
+          ) : null}
+
+          <div className="mt-4 flex items-baseline justify-between">
+            <h2 className="text-[11px] uppercase tracking-[0.18em] text-muted">
+              Series · {currentDone}/{current.sets.length}
+            </h2>
+            {exercise.esTiempo ? (
+              <span className="flex items-center gap-1 text-xs text-muted">
+                <Timer className="size-3.5" />
+                en segundos
+              </span>
+            ) : null}
+          </div>
+
+          <ul className="mt-2 space-y-2">
+            {current.sets.map((st, i) => (
+              <SetRow
+                key={st.id}
+                set={st}
+                index={i}
+                unit={unit}
+                suffix={exercise.esTiempo ? "seg" : "reps"}
+                active={openSet?.id === st.id}
+                onChange={(patch) => updateSet(session.currentIndex, st.id, patch)}
+                onToggle={() => toggleSet(session.currentIndex, st.id)}
+              />
             ))}
           </ul>
 
-          <div className="mt-3 flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={() => addSet(session.currentIndex)}>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              className="basis-28 flex-1"
+              onClick={() => {
+                setShowDetail(false);
+                addSet(session.currentIndex);
+              }}
+            >
               <Plus className="size-4" />
               Serie
             </Button>
-            <Button variant="secondary" className="flex-1" onClick={() => setPicker(true)}>
+            <Button
+              variant="secondary"
+              className="basis-28 flex-1"
+              onClick={() => {
+                setShowDetail(false);
+                setPicker(true);
+              }}
+            >
               <Replace className="size-4" />
               Cambiar
             </Button>
             {current.sets.length > 1 ? (
               <Button
                 variant="ghost"
+                className="basis-28 flex-1"
                 onClick={() => removeSet(session.currentIndex, current.sets.at(-1)!.id)}
               >
                 Quitar
@@ -202,69 +290,128 @@ export function SessionView() {
         </div>
       )}
 
-      <footer className="safe-bottom shrink-0 border-t border-line px-4 pt-3 pb-4">
-        <div className="mb-3 flex items-center justify-between">
+      {/* Session controls, anchored to the visual bottom edge so collapsing mobile
+          browser chrome can never bury the active set or the navigation. */}
+      <footer className="session-bar-fixed z-20 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur safe-bottom">
+        {nextExercise && !resting ? (
+          <p className="mb-2 truncate text-center text-xs text-muted">
+            Sigue: <span className="text-fg">{nextExercise.name}</span>
+          </p>
+        ) : null}
+        <div className="flex gap-2">
           <button
             type="button"
-            className="flex size-12 items-center justify-center rounded-lg bg-elevated pressable disabled:opacity-30"
+            className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-elevated pressable disabled:opacity-30"
             disabled={session.currentIndex === 0}
             onClick={() => setCurrent(session.currentIndex - 1)}
-            aria-label="Anterior"
+            aria-label="Ejercicio anterior"
           >
             <ChevronLeft className="size-5" />
           </button>
-          <p className="text-sm tabular-nums text-muted">
-            {session.currentIndex + 1} / {session.exercises.length}
-          </p>
+          {openSet ? (
+            <Button
+              size="lg"
+              className="min-w-0 flex-1 px-3"
+              onClick={() => toggleSet(session.currentIndex, openSet.id)}
+            >
+              <CheckCheck className="size-5 shrink-0" />
+              <span className="truncate">
+                Serie {current.sets.indexOf(openSet) + 1} · {formatWeight(openSet.weightKg, unit)} ×{" "}
+                {openSet.reps}
+                {exercise.esTiempo ? "s" : ""}
+              </span>
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="min-w-0 flex-1 px-3"
+              disabled={nextIndex < 0}
+              onClick={() => setCurrent(nextIndex)}
+            >
+              <ChevronRight className="size-5 shrink-0" />
+              <span className="truncate">
+                {nextExercise ? `Siguiente: ${nextExercise.name}` : "Último ejercicio"}
+              </span>
+            </Button>
+          )}
           <button
             type="button"
-            className="flex size-12 items-center justify-center rounded-lg bg-elevated pressable disabled:opacity-30"
+            className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-elevated pressable disabled:opacity-30"
             disabled={session.currentIndex >= session.exercises.length - 1}
             onClick={() => setCurrent(session.currentIndex + 1)}
-            aria-label="Siguiente"
+            aria-label="Ejercicio siguiente"
           >
             <ChevronRight className="size-5" />
           </button>
         </div>
-        <Button block size="lg" onClick={() => finish()}>
-          Terminar sesión
-        </Button>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-xs tabular-nums text-muted">
+            {session.currentIndex + 1} / {session.exercises.length} ejercicios
+          </p>
+          <button
+            type="button"
+            className="flex h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted pressable"
+            onClick={() => finish()}
+          >
+            <Check className="size-3.5" />
+            Terminar sesión
+          </button>
+        </div>
       </footer>
 
       {resting ? (
-        <div className="absolute inset-0 z-20 flex flex-col justify-end bg-bg/70">
+        <div className="absolute inset-0 z-30 flex flex-col justify-end bg-bg/70">
           <div className="rounded-t-2xl bg-surface px-6 pb-10 pt-6 shadow-[var(--shadow-border)]">
-            <p className="text-center text-xs uppercase tracking-[0.2em] text-muted">Descanso</p>
+            <p className="text-center text-xs uppercase tracking-[0.2em] text-muted">
+              {pausedRest != null ? "Descanso en pausa" : "Descanso"}
+            </p>
             <div className="mt-4 flex justify-center">
               <Ring
                 size={168}
                 stroke={8}
-                value={session.restTotalSec ? 1 - remaining / session.restTotalSec : 0}
+                value={
+                  pausedRest != null
+                    ? 1 - pausedRest / Math.max(1, session.restTotalSec)
+                    : session.restTotalSec
+                      ? 1 - remaining / session.restTotalSec
+                      : 0
+                }
                 label={formatClock(remaining)}
-                sub="rest"
+                sub={pausedRest != null ? "pausa" : "rest"}
               />
             </div>
-            <p className="mt-3 text-center text-sm text-muted">
-              Siguiente: {formatWeight(current.sets.find((s) => !s.completed)?.weightKg ?? 0, unit)}
+            <p className="mt-3 truncate text-center text-sm text-muted">
+              Sigue: <span className="text-fg">{nextUp ?? "cierre de sesión"}</span>
             </p>
-            <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2">
               <Button variant="secondary" onClick={() => addRest(-15)}>
                 −15s
               </Button>
-              <Button variant="secondary" onClick={() => skipRest()}>
-                Saltar
-              </Button>
+              {pausedRest != null ? (
+                <Button onClick={resumeRest}>
+                  <Play className="size-4" />
+                  Seguir
+                </Button>
+              ) : (
+                <Button onClick={pauseRest}>
+                  <Pause className="size-4" />
+                  Pausa
+                </Button>
+              )}
               <Button variant="secondary" onClick={() => addRest(15)}>
                 +15s
               </Button>
             </div>
+            <Button variant="ghost" block className="mt-1" onClick={() => skipRest()}>
+              Saltar descanso
+            </Button>
           </div>
         </div>
       ) : null}
 
       {confirm ? (
-        <div className="absolute inset-0 z-30 flex items-end bg-bg/70">
-          <div className="w-full rounded-t-2xl bg-surface px-5 pb-8 pt-5">
+        <div className="absolute inset-0 z-40 flex items-end bg-bg/70">
+          <div className="w-full rounded-t-2xl bg-surface px-5 pb-8 pt-5 shadow-[var(--shadow-border)] safe-bottom">
             <h2 className="font-display text-3xl">¿Salir sin guardar?</h2>
             <p className="mt-2 text-sm text-muted">Las series de esta sesión no se registrarán.</p>
             <div className="mt-5 flex gap-2">
@@ -284,32 +431,102 @@ export function SessionView() {
     </div>
   );
 }
+
 /**
- * Demonstration clip for the current movement. The catalogue references media
- * that may not be shipped yet, so a failed load swaps in a calm placeholder
- * instead of leaving a broken-image icon in the middle of a workout.
+ * One set. The next unfinished set is the row you are on, so it is the one the
+ * accent ring points at; finished rows recede.
  */
-function GifPlate({ src, name }: { src: string; name: string }) {
+function SetRow({
+  set,
+  index,
+  unit,
+  suffix,
+  active,
+  onChange,
+  onToggle,
+}: {
+  set: WorkoutSet;
+  index: number;
+  unit: "kg" | "lb";
+  suffix: string;
+  active: boolean;
+  onChange: (patch: Partial<WorkoutSet>) => void;
+  onToggle: () => void;
+}) {
+  return (
+    <li
+      className={cn(
+        "rounded-xl bg-surface px-2 py-2 shadow-[var(--shadow-border)]",
+        set.completed && "bg-elevated/60",
+        active && "ring-1 ring-accent/45",
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          className={cn(
+            "w-6 text-center font-display text-lg tabular-nums",
+            active ? "text-accent" : "text-muted",
+          )}
+        >
+          {index + 1}
+        </span>
+        <Stepper
+          value={toDisplayWeight(set.weightKg, unit)}
+          step={weightStep(unit)}
+          suffix={unit}
+          wide
+          onChange={(n) => onChange({ weightKg: fromDisplayWeight(n, unit) })}
+        />
+        <Stepper
+          value={set.reps}
+          step={1}
+          min={0}
+          suffix={suffix}
+          onChange={(n) => onChange({ reps: Math.max(0, Math.round(n)) })}
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className={cn(
+            "flex size-12 shrink-0 items-center justify-center rounded-lg pressable",
+            set.completed ? "bg-accent text-accent-fg" : "bg-elevated text-muted",
+          )}
+          aria-label={set.completed ? `Desmarcar serie ${index + 1}` : `Completar serie ${index + 1}`}
+        >
+          <Check className="size-5" />
+        </button>
+      </div>
+    </li>
+  );
+}
+
+/**
+ * Reference clip for the current movement. The catalogue ships product photos on
+ * a white background, so the plate frames them and fades their edges into the
+ * card instead of dropping a white slab mid-workout; a failed load swaps in a
+ * calm note rather than a broken icon.
+ */
+function MediaPlate({ src, name }: { src: string; name: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <div className="mt-4 flex h-40 items-center justify-center rounded-2xl bg-surface shadow-[var(--shadow-border)]">
+      <div className="flex h-32 items-center justify-center rounded-lg bg-elevated">
         <p className="max-w-[16rem] text-center text-xs text-muted">
-          Sin video para este ejercicio. Seguí las indicaciones y tu técnica.
+          Sin referencia para este ejercicio. Seguí las indicaciones y tu técnica.
         </p>
       </div>
     );
   }
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-border)]">
+    <figure className="media-plate">
       <img
         src={src}
-        alt={`Demostración de ${name}`}
-        className="media h-40 w-full object-contain"
+        alt={`Referencia de ${name}`}
+        className="media h-44 w-full object-contain sm:h-52"
         loading="lazy"
         decoding="async"
         onError={() => setFailed(true)}
       />
-    </div>
+    </figure>
   );
 }

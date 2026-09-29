@@ -175,17 +175,61 @@
   padding-bottom: calc(max(0.5rem, env(safe-area-inset-bottom)) - 0.25rem);
 }
 
+/* Same idea for the live-session bar: it must hug the *visual* bottom edge so a
+   collapsing address bar (or a keyboard) never buries the "finish set"/
+   "next exercise" controls under browser chrome. */
+.session-bar-fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  max-width: 42rem;
+}
+
 /* Reserve the tab bar's height so the last row of a list is never trapped
    underneath it. Only needed below `lg`, where the bar is actually shown. */
 @media (max-width: 1023px) {
   .tab-bar-pad {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
+
+  /* Below `lg` the app's content sits in a phone-width column, so the fixed
+     session bar lines up with it. */
+  .session-bar-fixed {
+    max-width: 36rem;
+  }
 }
 
 img.media {
   outline: 1px solid var(--tu-line);
   outline-offset: -1px;
+}
+
+/* The catalogue ships product photos: a white studio background straight in the
+   middle of a dark workout screen glares and breaks the card apart. Framing the
+   clip and fading its edges into the card keeps it as a reference, not a slab. */
+.media-plate {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--tu-elevated);
+  box-shadow: var(--shadow-border);
+}
+.media-plate img {
+  display: block;
+  width: 100%;
+}
+.media-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      120% 90% at 50% 45%,
+      transparent 38%,
+      color-mix(in oklab, var(--tu-elevated) 92%, transparent) 100%
+    );
 }
 
 /* Mid/low-end phones: static gradient instead of a 100 kB+ photo in the hero. */
