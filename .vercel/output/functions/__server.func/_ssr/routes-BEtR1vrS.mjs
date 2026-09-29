@@ -9,12 +9,12 @@ import { a as useCurrentUserState, i as useCurrentUser, n as cn, r as uid, t as 
 import { n as Splash, r as createSsrRpc, t as RedirectToSignIn } from "./splash-DZIrZWDa.mjs";
 import { i as hasGateSessionMarker } from "./server-BHRbO-e7.mjs";
 import { t as Button } from "./button-D9xwQ7hg.mjs";
-import { _ as Check, a as Search, c as Plus, d as Minus, f as House, g as ChevronLeft, h as ChevronRight, i as Trash2, l as Play, m as CirclePlus, n as User, o as RotateCcw, p as Dumbbell, s as Replace, t as X, u as Pause, v as Activity } from "../_libs/lucide-react.mjs";
+import { C as ArrowDown, S as ArrowUp, _ as ChevronRight, a as Timer, b as Check, c as Replace, d as Play, f as Pause, g as CirclePlus, h as Dumbbell, i as Trash2, l as Repeat, m as House, n as User, o as Search, p as Minus, s as RotateCcw, t as X, u as Plus, v as ChevronLeft, w as Activity, x as CheckCheck, y as ChevronDown } from "../_libs/lucide-react.mjs";
 import { n as persist, r as create, t as createJSONStorage } from "../_libs/zustand.mjs";
 import { a as startOfWeek, i as format, n as subDays, r as isToday, t as es } from "../_libs/date-fns.mjs";
 import { a as ResponsiveContainer, i as Area, n as YAxis, o as Tooltip, r as XAxis, t as AreaChart } from "../_libs/recharts+[...].mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/@radix-ui/react-switch+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CFRxYhEh.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BEtR1vrS.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
@@ -181,11 +181,7 @@ var EXERCISES = [
 		muscle: "espalda",
 		secondary: ["biceps"],
 		equipment: "maquina",
-		cues: [
-			"Pecho alto",
-			"Tirar con los codos",
-			"No balancear"
-		],
+		cues: ["Lleva la barra hacia la parte superior del pecho manteniendo una ligera inclinación del torso hacia atrás sin balancearte."],
 		defaultSets: 3,
 		defaultReps: 8,
 		restSec: 90,
@@ -213,17 +209,24 @@ var EXERCISES = [
 		muscle: "espalda",
 		secondary: ["biceps"],
 		equipment: "maquina",
-		cues: [
-			"Pecho abierto y espalda neutra",
-			"Llevá los codos hacia atrás",
-			"Juntá las escápulas al final",
-			"No encorves la espalda",
-			"No uses impulso"
-		],
+		cues: ["Mantén el pecho firme contra el apoyo para no meter zona lumbar y saca la fuerza de las escápulas."],
 		defaultSets: 3,
 		defaultReps: 8,
 		restSec: 90,
 		compound: true
+	},
+	{
+		id: "remo-sentado-maquina",
+		name: "Remo sentado en máquina",
+		muscle: "espalda",
+		secondary: ["biceps", "hombros"],
+		equipment: "maquina",
+		cues: ["Los codos abiertos en un ángulo de 45° a 60° respecto al cuerpo. Junta las escápulas al final de cada repetición."],
+		defaultSets: 3,
+		defaultReps: 10,
+		restSec: 90,
+		compound: true,
+		gif: "/media/remo-sentado-maquina.png"
 	},
 	{
 		id: "remo-unilateral",
@@ -231,13 +234,7 @@ var EXERCISES = [
 		muscle: "espalda",
 		secondary: ["biceps"],
 		equipment: "polea",
-		cues: [
-			"Espalda neutra",
-			"Hombro abajo",
-			"Llevá el codo hacia atrás",
-			"No gires el torso",
-			"Volvé controlando"
-		],
+		cues: ["Lleva el codo hacia la cadera manteniendo el brazo pegado al torso y evita rotar el tronco al tirar."],
 		defaultSets: 3,
 		defaultReps: 8,
 		restSec: 90,
@@ -1096,6 +1093,12 @@ var ROUTINES = [
 				restSec: 150
 			},
 			{
+				exerciseId: "remo-sentado-maquina",
+				sets: 3,
+				reps: 10,
+				restSec: 90
+			},
+			{
 				exerciseId: "remo-barra",
 				sets: 4,
 				reps: 8,
@@ -1195,6 +1198,12 @@ var ROUTINES = [
 			},
 			{
 				exerciseId: "jalon",
+				sets: 3,
+				reps: 10,
+				restSec: 90
+			},
+			{
+				exerciseId: "remo-sentado-maquina",
 				sets: 3,
 				reps: 10,
 				restSec: 90
@@ -3322,6 +3331,75 @@ function Row({ label, value, step, min = 0, onChange }) {
 		})]
 	});
 }
+/**
+* Bottom-sheet dialog — the same shape the session screen already uses for its
+* rest timer and confirm prompts, lifted into a reusable component.
+*
+* It renders through a portal so a sheet opened from inside the scrolling
+* `<main>` covers the whole viewport instead of being clipped by it, and it
+* closes on backdrop tap / Escape. Body scroll is locked while open, which is
+* what makes it feel native on a phone.
+*/
+function Modal({ open, onClose, title, subtitle, children, footer, className }) {
+	(0, import_react.useEffect)(() => {
+		if (!open) return;
+		const onKey = (e) => {
+			if (e.key === "Escape") onClose();
+		};
+		window.addEventListener("keydown", onKey);
+		const previousOverflow = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+		return () => {
+			window.removeEventListener("keydown", onKey);
+			document.body.style.overflow = previousOverflow;
+		};
+	}, [open, onClose]);
+	if (!open || typeof document === "undefined") return null;
+	return (0, import_react_dom.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 flex items-end justify-center bg-bg/75 backdrop-blur-[2px] sm:items-center",
+		onMouseDown: (e) => {
+			if (e.target === e.currentTarget) onClose();
+		},
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			role: "dialog",
+			"aria-modal": "true",
+			"aria-label": title,
+			className: cn("flex max-h-[88dvh] w-full flex-col rounded-t-2xl bg-surface shadow-[var(--shadow-border-hover)]", "safe-bottom sm:max-w-md sm:rounded-2xl", className),
+			children: [
+				title ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
+					className: "flex items-start justify-between gap-3 border-b border-line px-5 pb-3 pt-5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "min-w-0",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+							className: "truncate font-display text-3xl leading-none tracking-tight",
+							children: title
+						}), subtitle ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1.5 text-sm text-muted",
+							children: subtitle
+						}) : null]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						onClick: onClose,
+						"aria-label": "Cerrar",
+						className: "-mr-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-muted pressable",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-5" })
+					})]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex justify-center pt-3",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1 w-10 rounded-full bg-line-strong" })
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "min-h-0 flex-1 overflow-y-auto px-5 py-4",
+					children
+				}),
+				footer ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "border-t border-line px-5 py-4",
+					children: footer
+				}) : null
+			]
+		})
+	}), document.body);
+}
 var MUSCLES = [
 	"todos",
 	"pecho",
@@ -3389,6 +3467,7 @@ function TrainView() {
 				}) : byDay.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RoutineCard, {
 					routine: r,
 					onStart: () => startRoutine(r),
+					startLabel: "Empezar",
 					extra: (r.scheduleDays ?? []).length ? (r.scheduleDays ?? []).map((d) => WEEKDAY_SHORT[d - 1]).join(" · ") : "Sin día asignado"
 				}, r.id))
 			}) : null,
@@ -3457,12 +3536,12 @@ function TrainView() {
 		]
 	});
 }
-function RoutineCard({ routine, onStart, onDelete, onEdit, extra }) {
+function RoutineCard({ routine, onStart, onOpen, onDelete, onEdit, extra, startLabel = "Entrenar" }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
 		className: "overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-border)]",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 			type: "button",
-			onClick: onStart,
+			onClick: onOpen ?? onStart,
 			className: "block w-full text-left pressable",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "relative h-28",
@@ -3488,20 +3567,133 @@ function RoutineCard({ routine, onStart, onDelete, onEdit, extra }) {
 					})]
 				})
 			})]
-		}), onDelete || onEdit ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		}), onStart || onDelete || onEdit ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "flex items-center justify-end gap-1 px-3 pb-3",
-			children: [onEdit ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				type: "button",
-				onClick: onEdit,
-				className: "flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-fg pressable ",
-				children: "Editar"
-			}) : null, onDelete ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				type: "button",
-				onClick: onDelete,
-				className: "h-11 rounded-lg px-3 text-sm text-danger pressable",
-				children: "Eliminar"
-			}) : null]
+			children: [
+				onStart ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					onClick: onStart,
+					className: "flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-accent pressable",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-4" }), startLabel]
+				}) : null,
+				onEdit ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: onEdit,
+					className: "flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-fg pressable ",
+					children: "Editar"
+				}) : null,
+				onDelete ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: onDelete,
+					className: "h-11 rounded-lg px-3 text-sm text-danger pressable",
+					children: "Eliminar"
+				}) : null
+			]
 		}) : null]
+	});
+}
+/**
+* Read-only summary of a routine — what the athlete will actually do, movement
+* by movement — plus the way in. Tapping a routine should never dump somebody
+* straight into a live session, so this sheet sits between the card and the
+* start button, and the choice to train is explicit.
+*/
+function RoutineSummary({ routine, onClose, onStart }) {
+	const unit = useTrain((s) => s.profile.unit);
+	const totalSets = routine.exercises.reduce((n, slot) => n + slot.sets, 0);
+	const days = routine.scheduleDays ?? [];
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal, {
+		open: true,
+		onClose,
+		title: routine.name,
+		subtitle: routine.focus,
+		footer: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+			block: true,
+			onClick: onStart,
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-4" }), "Empezar rutina"]
+		}),
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "space-y-4",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dl", {
+					className: "grid grid-cols-3 gap-2 text-center",
+					children: [
+						[`${routine.exercises.length}`, "ejercicios"],
+						[`${totalSets}`, "series"],
+						[`${routine.durationMin}`, "min aprox."]
+					].map(([value, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "rounded-xl bg-elevated px-2 py-3 shadow-[var(--shadow-border)]",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", {
+								className: "sr-only",
+								children: label
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", {
+								className: "font-display text-2xl leading-none tabular-nums",
+								children: value
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", {
+								className: "mt-1 text-[11px] uppercase tracking-wider text-muted",
+								children: label
+							})
+						]
+					}, label))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-sm text-muted",
+					children: [
+						LEVEL_LABEL[routine.level],
+						" · ",
+						days.length ? `avisa los ${days.map((d) => WEEKDAY_SHORT[d - 1]).join(", ")}` : "sin día asignado"
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+					className: "space-y-1.5",
+					children: routine.exercises.map((slot, i) => {
+						const ex = getExercise(slot.exerciseId);
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+							className: "flex items-baseline gap-3 rounded-xl bg-surface px-3 py-2.5 shadow-[var(--shadow-border)]",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "w-4 shrink-0 text-xs tabular-nums text-subtle",
+									children: i + 1
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "min-w-0 flex-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "block truncate font-medium",
+										children: ex.name
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "block truncate text-xs text-muted",
+										children: [
+											MUSCLE_LABEL[ex.muscle],
+											" · ",
+											EQUIPMENT_LABEL[ex.equipment]
+										]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "shrink-0 text-right text-xs tabular-nums text-muted",
+									children: [
+										slot.sets,
+										" × ",
+										slot.reps,
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "block text-subtle",
+											children: [
+												slot.weightKg ? `${formatWeight(slot.weightKg, unit)} · ` : "",
+												slot.restSec,
+												"s"
+											]
+										})
+									]
+								})
+							]
+						}, `${slot.exerciseId}-${i}`);
+					})
+				})
+			]
+		})
 	});
 }
 function Library({ onPick, hideStartHint }) {
@@ -3629,86 +3821,19 @@ function planPlates(targetKg, barKg) {
 		possible: remaining < .05
 	};
 }
-/**
-* Bottom-sheet dialog — the same shape the session screen already uses for its
-* rest timer and confirm prompts, lifted into a reusable component.
-*
-* It renders through a portal so a sheet opened from inside the scrolling
-* `<main>` covers the whole viewport instead of being clipped by it, and it
-* closes on backdrop tap / Escape. Body scroll is locked while open, which is
-* what makes it feel native on a phone.
-*/
-function Modal({ open, onClose, title, subtitle, children, footer, className }) {
-	(0, import_react.useEffect)(() => {
-		if (!open) return;
-		const onKey = (e) => {
-			if (e.key === "Escape") onClose();
-		};
-		window.addEventListener("keydown", onKey);
-		const previousOverflow = document.body.style.overflow;
-		document.body.style.overflow = "hidden";
-		return () => {
-			window.removeEventListener("keydown", onKey);
-			document.body.style.overflow = previousOverflow;
-		};
-	}, [open, onClose]);
-	if (!open || typeof document === "undefined") return null;
-	return (0, import_react_dom.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "fixed inset-0 z-50 flex items-end justify-center bg-bg/75 backdrop-blur-[2px] sm:items-center",
-		onMouseDown: (e) => {
-			if (e.target === e.currentTarget) onClose();
-		},
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			role: "dialog",
-			"aria-modal": "true",
-			"aria-label": title,
-			className: cn("flex max-h-[88dvh] w-full flex-col rounded-t-2xl bg-surface shadow-[var(--shadow-border-hover)]", "safe-bottom sm:max-w-md sm:rounded-2xl", className),
-			children: [
-				title ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
-					className: "flex items-start justify-between gap-3 border-b border-line px-5 pb-3 pt-5",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "min-w-0",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-							className: "truncate font-display text-3xl leading-none tracking-tight",
-							children: title
-						}), subtitle ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "mt-1.5 text-sm text-muted",
-							children: subtitle
-						}) : null]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						onClick: onClose,
-						"aria-label": "Cerrar",
-						className: "-mr-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-muted pressable",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-5" })
-					})]
-				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "flex justify-center pt-3",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1 w-10 rounded-full bg-line-strong" })
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "min-h-0 flex-1 overflow-y-auto px-5 py-4",
-					children
-				}),
-				footer ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "border-t border-line px-5 py-4",
-					children: footer
-				}) : null
-			]
-		})
-	}), document.body);
-}
 function CreateView() {
 	const extras = useTrain((s) => s.customRoutines);
 	const startRoutine = useTrain((s) => s.startRoutine);
 	const deleteCustom = useTrain((s) => s.deleteCustomRoutine);
 	const [mode, setMode] = (0, import_react.useState)("rutinas");
 	const [editingId, setEditingId] = (0, import_react.useState)(null);
+	const [previewId, setPreviewId] = (0, import_react.useState)(null);
 	function openCreator(id) {
 		setEditingId(id);
 		setMode("crear");
 	}
 	const editing = editingId ? extras.find((r) => r.id === editingId) : void 0;
+	const preview = previewId ? extras.find((r) => r.id === previewId) : void 0;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "flex min-h-0 flex-1 flex-col",
 		children: [
@@ -3733,21 +3858,34 @@ function CreateView() {
 			}),
 			mode === "rutinas" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "space-y-3 pb-8 stagger-in",
-				children: [extras.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "text-sm text-muted",
-					children: "Todavía no tenés rutinas propias. Creá una y asignale un día: el inicio te avisa."
-				}) : extras.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RoutineCard, {
-					routine: r,
-					onStart: () => startRoutine(r),
-					onEdit: () => openCreator(r.id),
-					onDelete: () => deleteCustom(r.id),
-					extra: (r.scheduleDays ?? []).length ? (r.scheduleDays ?? []).map((d) => WEEKDAY_SHORT[d - 1]).join(" · ") : "Sin día asignado"
-				}, r.id)), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: "secondary",
-					block: true,
-					onClick: () => openCreator(null),
-					children: "Nueva rutina"
-				})]
+				children: [
+					extras.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-sm text-muted",
+						children: "Todavía no tenés rutinas propias. Creá una y asignale un día: el inicio te avisa."
+					}) : extras.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RoutineCard, {
+						routine: r,
+						onStart: () => startRoutine(r),
+						onOpen: () => setPreviewId(r.id),
+						startLabel: "Empezar ahora",
+						onEdit: () => openCreator(r.id),
+						onDelete: () => deleteCustom(r.id),
+						extra: (r.scheduleDays ?? []).length ? (r.scheduleDays ?? []).map((d) => WEEKDAY_SHORT[d - 1]).join(" · ") : "Sin día asignado"
+					}, r.id)),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+						variant: "secondary",
+						block: true,
+						onClick: () => openCreator(null),
+						children: "Nueva rutina"
+					}),
+					preview ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RoutineSummary, {
+						routine: preview,
+						onClose: () => setPreviewId(null),
+						onStart: () => {
+							setPreviewId(null);
+							startRoutine(preview);
+						}
+					}) : null
+				]
 			}) : null,
 			mode === "crear" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Creator, {
 				routine: editing,
@@ -3769,6 +3907,7 @@ function Creator({ routine, onDone }) {
 	const [days, setDays] = (0, import_react.useState)(routine?.scheduleDays ?? [isoToday()]);
 	const [libOpen, setLibOpen] = (0, import_react.useState)(false);
 	const [editing, setEditing] = (0, import_react.useState)(null);
+	const [swapIndex, setSwapIndex] = (0, import_react.useState)(null);
 	function add(id) {
 		const ex = getExercise(id);
 		setPicked((p) => [...p, {
@@ -3785,6 +3924,28 @@ function Creator({ routine, onDone }) {
 			...slot,
 			...patch
 		} : slot));
+	}
+	/** Swap the movement but keep the sets/reps/rest/weight the athlete dialled in. */
+	function swapExercise(index, exerciseId) {
+		setPicked((prev) => prev.map((slot, i) => i === index ? {
+			...slot,
+			exerciseId
+		} : slot));
+		setSwapIndex(null);
+	}
+	/** Move a slot one position up (-1) or down (1) in the routine order. */
+	function moveSlot(index, delta) {
+		setPicked((prev) => {
+			const target = index + delta;
+			if (target < 0 || target >= prev.length) return prev;
+			const next = [...prev];
+			[next[index], next[target]] = [next[target], next[index]];
+			return next;
+		});
+		setEditing((prev) => {
+			if (prev === null || prev === "new") return prev;
+			return prev === index ? index + delta : prev;
+		});
 	}
 	function toggleDay(d) {
 		setDays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort());
@@ -3835,41 +3996,71 @@ function Creator({ routine, onDone }) {
 				children: picked.map((slot, i) => {
 					const ex = getExercise(slot.exerciseId);
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
-						className: "flex items-center gap-2 rounded-xl bg-surface pl-1 shadow-[var(--shadow-border)]",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							onClick: () => setEditing(i),
-							className: "flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-3 text-left pressable",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-								className: "min-w-0 flex-1",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "block truncate font-medium",
-									children: ex.name
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-									className: "block truncate text-xs tabular-nums text-muted",
-									children: [
-										MUSCLE_LABEL[ex.muscle],
-										" · ",
-										EQUIPMENT_LABEL[ex.equipment],
-										" ·",
-										" ",
-										slot.sets,
-										" series × ",
-										slot.reps,
-										" reps",
-										slot.weightKg ? ` · ${formatWeight(slot.weightKg, unit)}` : "",
-										" · ",
-										slot.restSec,
-										"s"
-									]
-								})]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-4 shrink-0 text-muted" })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: "mr-1 flex size-10 shrink-0 items-center justify-center text-muted pressable",
-							onClick: () => setPicked((p) => p.filter((_, idx) => idx !== i)),
-							"aria-label": `Quitar ${ex.name}`,
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-4" })
+						className: "rounded-xl bg-surface p-1 shadow-[var(--shadow-border)]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setEditing(i),
+								className: "flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-3 text-left pressable",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "min-w-0 flex-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "block truncate font-medium",
+										children: ex.name
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "block truncate text-xs tabular-nums text-muted",
+										children: [
+											MUSCLE_LABEL[ex.muscle],
+											" · ",
+											EQUIPMENT_LABEL[ex.equipment],
+											" ·",
+											" ",
+											slot.sets,
+											" series × ",
+											slot.reps,
+											" reps",
+											slot.weightKg ? ` · ${formatWeight(slot.weightKg, unit)}` : "",
+											" · ",
+											slot.restSec,
+											"s"
+										]
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-4 shrink-0 text-muted" })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								className: "mr-1 flex size-10 shrink-0 items-center justify-center text-muted pressable",
+								onClick: () => setPicked((p) => p.filter((_, idx) => idx !== i)),
+								"aria-label": `Quitar ${ex.name}`,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-4" })
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-1 border-t border-line px-1 pt-1",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: () => setSwapIndex(i),
+									"aria-label": `Reemplazar ${ex.name}`,
+									className: "flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-muted pressable",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Repeat, { className: "size-4 shrink-0" }), "Reemplazar"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => moveSlot(i, -1),
+									disabled: i === 0,
+									"aria-label": `Subir ${ex.name}`,
+									className: "flex size-10 shrink-0 items-center justify-center rounded-lg text-muted pressable disabled:opacity-30",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowUp, { className: "size-4" })
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => moveSlot(i, 1),
+									disabled: i === picked.length - 1,
+									"aria-label": `Bajar ${ex.name}`,
+									className: "flex size-10 shrink-0 items-center justify-center rounded-lg text-muted pressable disabled:opacity-30",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowDown, { className: "size-4" })
+								})
+							]
 						})]
 					}, `${slot.exerciseId}-${i}`);
 				})
@@ -3894,6 +4085,16 @@ function Creator({ routine, onDone }) {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Library, {
 					hideStartHint: true,
 					onPick: add
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal, {
+				open: swapIndex !== null,
+				onClose: () => setSwapIndex(null),
+				title: "Reemplazar",
+				subtitle: swapIndex !== null ? `${getExercise(picked[swapIndex].exerciseId).name} sale de la rutina; elegí el que entra y mantenés series, reps y peso.` : void 0,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Library, {
+					hideStartHint: true,
+					onPick: (id) => swapIndex !== null && swapExercise(swapIndex, id)
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal, {
@@ -4201,7 +4402,10 @@ function SessionView() {
 	const discard = useTrain((s) => s.discardSession);
 	const keepAwake = useTrain((s) => s.settings.keepAwake);
 	const [now, setNow] = (0, import_react.useState)(Date.now());
+	/** Seconds left on the rest timer when it was paused by hand, else null. */
+	const [pausedRest, setPausedRest] = (0, import_react.useState)(null);
 	const [picker, setPicker] = (0, import_react.useState)(false);
+	const [showDetail, setShowDetail] = (0, import_react.useState)(false);
 	const [confirm, setConfirm] = (0, import_react.useState)(false);
 	const [rang, setRang] = (0, import_react.useState)(false);
 	(0, import_react.useEffect)(() => {
@@ -4221,6 +4425,13 @@ function SessionView() {
 			releaseWakeLock();
 		};
 	}, [keepAwake]);
+	const currentIndex = session?.currentIndex ?? 0;
+	(0, import_react.useEffect)(() => {
+		setShowDetail(false);
+	}, [currentIndex]);
+	(0, import_react.useEffect)(() => {
+		if (!session?.restUntil) setPausedRest(null);
+	}, [session?.restUntil]);
 	(0, import_react.useEffect)(() => {
 		if (!session?.restUntil) {
 			setRang(false);
@@ -4241,51 +4452,77 @@ function SessionView() {
 	if (!session) return null;
 	const current = session.exercises[session.currentIndex];
 	const exercise = getExercise(current.exerciseId);
-	const remaining = session.restUntil ? Math.max(0, (session.restUntil - now) / 1e3) : 0;
+	const countdown = session.restUntil ? Math.max(0, (session.restUntil - now) / 1e3) : 0;
+	const remaining = pausedRest != null ? pausedRest : countdown;
 	const resting = remaining > 0;
 	const doneSets = session.exercises.reduce((n, ex) => n + ex.sets.filter((s) => s.completed).length, 0);
 	const totalSets = session.exercises.reduce((n, ex) => n + ex.sets.length, 0);
 	const elapsed = now - session.startedAt;
+	const nextIndex = session.exercises.findIndex((ex, i) => i > session.currentIndex && ex.sets.some((st) => !st.completed));
+	const nextExercise = nextIndex >= 0 ? getExercise(session.exercises[nextIndex].exerciseId) : void 0;
+	const currentDone = current.sets.filter((st) => st.completed).length;
+	const openSet = current.sets.find((st) => !st.completed);
+	const nextUp = openSet ? `${formatWeight(openSet.weightKg, unit)} × ${openSet.reps}` : nextExercise?.name;
+	function pauseRest() {
+		setPausedRest(countdown);
+	}
+	function resumeRest() {
+		if (pausedRest == null) return;
+		addRest(pausedRest - countdown);
+		setPausedRest(null);
+	}
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "relative flex h-full min-h-0 flex-1 flex-col bg-bg",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
-				className: "flex items-center gap-2 px-4 pt-12 pb-3",
+				className: "flex shrink-0 items-center gap-2 border-b border-line px-4 pb-3 pt-8 safe-top",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 						type: "button",
-						className: "flex size-11 items-center justify-center rounded-lg text-muted pressable",
+						className: "-ml-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-muted pressable",
 						onClick: () => setConfirm(true),
 						"aria-label": "Cerrar sesión",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-5" })
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "min-w-0 flex-1",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "truncate text-xs uppercase tracking-[0.18em] text-muted",
-							children: session.routineName
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-							className: "text-sm tabular-nums text-fg",
-							children: [
-								formatDuration(elapsed),
-								" · ",
-								doneSets,
-								"/",
-								totalSets
-							]
-						})]
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "truncate text-[11px] uppercase tracking-[0.18em] text-muted",
+								children: session.routineName
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "font-display text-lg leading-tight tabular-nums",
+								children: [formatDuration(elapsed), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "ml-2 font-sans text-xs text-muted",
+									children: [
+										doneSets,
+										"/",
+										totalSets,
+										" series"
+									]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-1.5 h-1 overflow-hidden rounded-full bg-elevated",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "h-full rounded-full bg-accent transition-[width] duration-200",
+									style: { width: `${doneSets / Math.max(1, totalSets) * 100}%` }
+								})
+							})
+						]
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "h-1.5 w-20 overflow-hidden rounded-full bg-elevated",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "h-full bg-accent transition-[width] duration-200",
-							style: { width: `${doneSets / Math.max(1, totalSets) * 100}%` }
-						})
-					})
+					resting ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => pausedRest != null ? resumeRest() : pauseRest(),
+						"aria-label": pausedRest != null ? "Reanudar descanso" : "Pausar descanso",
+						className: cn("flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 font-display text-lg leading-none tabular-nums pressable", pausedRest != null ? "bg-elevated text-muted" : "bg-accent/15 text-accent"),
+						children: [pausedRest != null ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-4" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Pause, { className: "size-4" }), formatClock(remaining)]
+					}) : null
 				]
 			}),
 			picker ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "min-h-0 flex-1 overflow-y-auto px-4",
+				className: "min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-4 safe-bottom",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "mb-3 flex items-center justify-between",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
@@ -4305,10 +4542,10 @@ function SessionView() {
 					}
 				})]
 			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "min-h-0 flex-1 overflow-y-auto px-4 pb-4",
+				className: "min-h-0 flex-1 overflow-y-auto px-4 pb-36 pt-4",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "text-xs uppercase tracking-[0.18em] text-accent",
+						className: "text-[11px] uppercase tracking-[0.18em] text-accent",
 						children: [
 							MUSCLE_LABEL[exercise.muscle],
 							" · ",
@@ -4316,74 +4553,79 @@ function SessionView() {
 						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-						className: "mt-1 font-display text-5xl leading-none tracking-tight",
+						className: "mt-1 font-display text-4xl leading-none tracking-tight sm:text-5xl",
 						children: exercise.name
 					}),
-					exercise.cues.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "mt-3 text-sm text-muted",
-						children: exercise.cues.join(" · ")
-					}) : null,
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "mt-2 text-xs text-muted",
-						children: "Tocá el peso para escribirlo directamente, o usá − / +."
+					exercise.cues.length || exercise.gif ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => setShowDetail((v) => !v),
+						"aria-expanded": showDetail,
+						className: "-ml-2 mt-1 flex h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted pressable",
+						children: [exercise.gif ? "Técnica y referencia" : "Indicaciones", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: cn("size-4 transition-transform", showDetail && "rotate-180") })]
+					}), showDetail ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pb-1",
+						children: [exercise.gif ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MediaPlate, {
+							src: exercise.gif,
+							name: exercise.name
+						}) : null, exercise.cues.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+							className: "mt-3 space-y-1.5",
+							children: exercise.cues.map((cue) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+								className: "flex gap-2 text-sm text-muted",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "mt-1.5 size-1.5 shrink-0 rounded-full bg-accent/70" }), cue]
+							}, cue))
+						}) : null]
+					}) : null] }) : null,
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 flex items-baseline justify-between",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+							className: "text-[11px] uppercase tracking-[0.18em] text-muted",
+							children: [
+								"Series · ",
+								currentDone,
+								"/",
+								current.sets.length
+							]
+						}), exercise.esTiempo ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "flex items-center gap-1 text-xs text-muted",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Timer, { className: "size-3.5" }), "en segundos"]
+						}) : null]
 					}),
-					exercise.gif ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GifPlate, {
-						src: exercise.gif,
-						name: exercise.name
-					}) : null,
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
-						className: "mt-6 space-y-2",
-						children: current.sets.map((st, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", {
-							className: cn("rounded-xl px-3 py-2 shadow-[var(--shadow-border)]", st.completed ? "bg-elevated/70" : "bg-surface"),
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-center gap-2",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "w-6 text-center font-display text-lg tabular-nums text-muted",
-										children: i + 1
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Stepper, {
-										value: toDisplayWeight(st.weightKg, unit),
-										step: weightStep(unit),
-										suffix: unit,
-										wide: true,
-										onChange: (n) => updateSet(session.currentIndex, st.id, { weightKg: fromDisplayWeight(n, unit) })
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Stepper, {
-										value: st.reps,
-										step: 1,
-										min: 0,
-										suffix: exercise.esTiempo ? "seg" : "reps",
-										onChange: (n) => updateSet(session.currentIndex, st.id, { reps: Math.max(0, Math.round(n)) })
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-										type: "button",
-										onClick: () => toggleSet(session.currentIndex, st.id),
-										className: cn("flex size-12 shrink-0 items-center justify-center rounded-lg pressable", st.completed ? "bg-accent text-accent-fg" : "bg-elevated text-muted"),
-										"aria-label": st.completed ? "Desmarcar serie" : "Completar serie",
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-5" })
-									})
-								]
-							})
+						className: "mt-2 space-y-2",
+						children: current.sets.map((st, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SetRow, {
+							set: st,
+							index: i,
+							unit,
+							suffix: exercise.esTiempo ? "seg" : "reps",
+							active: openSet?.id === st.id,
+							onChange: (patch) => updateSet(session.currentIndex, st.id, patch),
+							onToggle: () => toggleSet(session.currentIndex, st.id)
 						}, st.id))
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mt-3 flex gap-2",
+						className: "mt-3 flex flex-wrap gap-2",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 								variant: "secondary",
-								className: "flex-1",
-								onClick: () => addSet(session.currentIndex),
+								className: "basis-28 flex-1",
+								onClick: () => {
+									setShowDetail(false);
+									addSet(session.currentIndex);
+								},
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), "Serie"]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 								variant: "secondary",
-								className: "flex-1",
-								onClick: () => setPicker(true),
+								className: "basis-28 flex-1",
+								onClick: () => {
+									setShowDetail(false);
+									setPicker(true);
+								},
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Replace, { className: "size-4" }), "Cambiar"]
 							}),
 							current.sets.length > 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 								variant: "ghost",
+								className: "basis-28 flex-1",
 								onClick: () => removeSet(session.currentIndex, current.sets.at(-1).id),
 								children: "Quitar"
 							}) : null
@@ -4392,77 +4634,122 @@ function SessionView() {
 				]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
-				className: "safe-bottom shrink-0 border-t border-line px-4 pt-3 pb-4",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "mb-3 flex items-center justify-between",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: "flex size-12 items-center justify-center rounded-lg bg-elevated pressable disabled:opacity-30",
-							disabled: session.currentIndex === 0,
-							onClick: () => setCurrent(session.currentIndex - 1),
-							"aria-label": "Anterior",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, { className: "size-5" })
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-							className: "text-sm tabular-nums text-muted",
+				className: "session-bar-fixed z-20 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur safe-bottom",
+				children: [
+					nextExercise && !resting ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "mb-2 truncate text-center text-xs text-muted",
+						children: ["Sigue: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-fg",
+							children: nextExercise.name
+						})]
+					}) : null,
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex gap-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								className: "flex size-14 shrink-0 items-center justify-center rounded-xl bg-elevated pressable disabled:opacity-30",
+								disabled: session.currentIndex === 0,
+								onClick: () => setCurrent(session.currentIndex - 1),
+								"aria-label": "Ejercicio anterior",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, { className: "size-5" })
+							}),
+							openSet ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+								size: "lg",
+								className: "min-w-0 flex-1 px-3",
+								onClick: () => toggleSet(session.currentIndex, openSet.id),
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CheckCheck, { className: "size-5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "truncate",
+									children: [
+										"Serie ",
+										current.sets.indexOf(openSet) + 1,
+										" · ",
+										formatWeight(openSet.weightKg, unit),
+										" ×",
+										" ",
+										openSet.reps,
+										exercise.esTiempo ? "s" : ""
+									]
+								})]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+								size: "lg",
+								className: "min-w-0 flex-1 px-3",
+								disabled: nextIndex < 0,
+								onClick: () => setCurrent(nextIndex),
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "truncate",
+									children: nextExercise ? `Siguiente: ${nextExercise.name}` : "Último ejercicio"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								className: "flex size-14 shrink-0 items-center justify-center rounded-xl bg-elevated pressable disabled:opacity-30",
+								disabled: session.currentIndex >= session.exercises.length - 1,
+								onClick: () => setCurrent(session.currentIndex + 1),
+								"aria-label": "Ejercicio siguiente",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-5" })
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 flex items-center justify-between gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-xs tabular-nums text-muted",
 							children: [
 								session.currentIndex + 1,
 								" / ",
-								session.exercises.length
+								session.exercises.length,
+								" ejercicios"
 							]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							className: "flex size-12 items-center justify-center rounded-lg bg-elevated pressable disabled:opacity-30",
-							disabled: session.currentIndex >= session.exercises.length - 1,
-							onClick: () => setCurrent(session.currentIndex + 1),
-							"aria-label": "Siguiente",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-5" })
-						})
-					]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					block: true,
-					size: "lg",
-					onClick: () => finish(),
-					children: "Terminar sesión"
-				})]
+							className: "flex h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted pressable",
+							onClick: () => finish(),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3.5" }), "Terminar sesión"]
+						})]
+					})
+				]
 			}),
 			resting ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute inset-0 z-20 flex flex-col justify-end bg-bg/70",
+				className: "absolute inset-0 z-30 flex flex-col justify-end bg-bg/70",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "rounded-t-2xl bg-surface px-6 pb-10 pt-6 shadow-[var(--shadow-border)]",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "text-center text-xs uppercase tracking-[0.2em] text-muted",
-							children: "Descanso"
+							children: pausedRest != null ? "Descanso en pausa" : "Descanso"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "mt-4 flex justify-center",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Ring, {
 								size: 168,
 								stroke: 8,
-								value: session.restTotalSec ? 1 - remaining / session.restTotalSec : 0,
+								value: pausedRest != null ? 1 - pausedRest / Math.max(1, session.restTotalSec) : session.restTotalSec ? 1 - remaining / session.restTotalSec : 0,
 								label: formatClock(remaining),
-								sub: "rest"
+								sub: pausedRest != null ? "pausa" : "rest"
 							})
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-							className: "mt-3 text-center text-sm text-muted",
-							children: ["Siguiente: ", formatWeight(current.sets.find((s) => !s.completed)?.weightKg ?? 0, unit)]
+							className: "mt-3 truncate text-center text-sm text-muted",
+							children: ["Sigue: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-fg",
+								children: nextUp ?? "cierre de sesión"
+							})]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-5 grid grid-cols-3 gap-2",
+							className: "mt-4 grid grid-cols-3 gap-2",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 									variant: "secondary",
 									onClick: () => addRest(-15),
 									children: "−15s"
 								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-									variant: "secondary",
-									onClick: () => skipRest(),
-									children: "Saltar"
+								pausedRest != null ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+									onClick: resumeRest,
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-4" }), "Seguir"]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+									onClick: pauseRest,
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Pause, { className: "size-4" }), "Pausa"]
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 									variant: "secondary",
@@ -4470,14 +4757,21 @@ function SessionView() {
 									children: "+15s"
 								})
 							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							variant: "ghost",
+							block: true,
+							className: "mt-1",
+							onClick: () => skipRest(),
+							children: "Saltar descanso"
 						})
 					]
 				})
 			}) : null,
 			confirm ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute inset-0 z-30 flex items-end bg-bg/70",
+				className: "absolute inset-0 z-40 flex items-end bg-bg/70",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "w-full rounded-t-2xl bg-surface px-5 pb-8 pt-5",
+					className: "w-full rounded-t-2xl bg-surface px-5 pb-8 pt-5 shadow-[var(--shadow-border)] safe-bottom",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
 							className: "font-display text-3xl",
@@ -4514,25 +4808,65 @@ function SessionView() {
 	});
 }
 /**
-* Demonstration clip for the current movement. The catalogue references media
-* that may not be shipped yet, so a failed load swaps in a calm placeholder
-* instead of leaving a broken-image icon in the middle of a workout.
+* One set. The next unfinished set is the row you are on, so it is the one the
+* accent ring points at; finished rows recede.
 */
-function GifPlate({ src, name }) {
-	const [failed, setFailed] = (0, import_react.useState)(false);
-	if (failed) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "mt-4 flex h-40 items-center justify-center rounded-2xl bg-surface shadow-[var(--shadow-border)]",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-			className: "max-w-[16rem] text-center text-xs text-muted",
-			children: "Sin video para este ejercicio. Seguí las indicaciones y tu técnica."
+function SetRow({ set, index, unit, suffix, active, onChange, onToggle }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", {
+		className: cn("rounded-xl bg-surface px-2 py-2 shadow-[var(--shadow-border)]", set.completed && "bg-elevated/60", active && "ring-1 ring-accent/45"),
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center gap-1.5",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("w-6 text-center font-display text-lg tabular-nums", active ? "text-accent" : "text-muted"),
+					children: index + 1
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Stepper, {
+					value: toDisplayWeight(set.weightKg, unit),
+					step: weightStep(unit),
+					suffix: unit,
+					wide: true,
+					onChange: (n) => onChange({ weightKg: fromDisplayWeight(n, unit) })
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Stepper, {
+					value: set.reps,
+					step: 1,
+					min: 0,
+					suffix,
+					onChange: (n) => onChange({ reps: Math.max(0, Math.round(n)) })
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: onToggle,
+					className: cn("flex size-12 shrink-0 items-center justify-center rounded-lg pressable", set.completed ? "bg-accent text-accent-fg" : "bg-elevated text-muted"),
+					"aria-label": set.completed ? `Desmarcar serie ${index + 1}` : `Completar serie ${index + 1}`,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-5" })
+				})
+			]
 		})
 	});
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "mt-4 overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-border)]",
+}
+/**
+* Reference clip for the current movement. The catalogue ships product photos on
+* a white background, so the plate frames them and fades their edges into the
+* card instead of dropping a white slab mid-workout; a failed load swaps in a
+* calm note rather than a broken icon.
+*/
+function MediaPlate({ src, name }) {
+	const [failed, setFailed] = (0, import_react.useState)(false);
+	if (failed) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "flex h-32 items-center justify-center rounded-lg bg-elevated",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "max-w-[16rem] text-center text-xs text-muted",
+			children: "Sin referencia para este ejercicio. Seguí las indicaciones y tu técnica."
+		})
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("figure", {
+		className: "media-plate",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
 			src,
-			alt: `Demostración de ${name}`,
-			className: "media h-40 w-full object-contain",
+			alt: `Referencia de ${name}`,
+			className: "media h-44 w-full object-contain sm:h-52",
 			loading: "lazy",
 			decoding: "async",
 			onError: () => setFailed(true)

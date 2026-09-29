@@ -5,8 +5,8 @@ import { _ as createFileRoute, d as Scripts, f as HeadContent, g as lazyRouteCom
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { t as auth } from "./server-BHRbO-e7.mjs";
 import { r as TriangleAlert } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-B_TW59mT.js
-var router_B_TW59mT_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CP7pavl2.js
+var router_CP7pavl2_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var FALLBACK_MESSAGE = "An unexpected error occurred. Try reloading the page.";
@@ -300,7 +300,7 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
-var styles_default = "/assets/styles-DDyY6tIK.css";
+var styles_default = "/assets/styles-7IdlbsYC.css";
 var APP_NAME = "TrainUp";
 var THEME_BOOT = `(function(){try{var t=localStorage.getItem("trainup-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.setAttribute("data-theme","dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 var Route$4 = createRootRoute({
@@ -377,7 +377,7 @@ var Route$4 = createRootRoute({
 		})]
 	})
 });
-var $$splitComponentImporter$2 = () => import("./routes-CFRxYhEh.mjs");
+var $$splitComponentImporter$2 = () => import("./routes-BEtR1vrS.mjs");
 var Route$3 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 /** Hard cap so a wedged storage read can never leave the splash up forever. */
 /**
@@ -426,4 +426,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_B_TW59mT_exports as t };
+export { getRouter, router_CP7pavl2_exports as t };

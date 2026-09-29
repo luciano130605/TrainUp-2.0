@@ -148,7 +148,7 @@ export const EXERCISES: Exercise[] = [
     muscle: "espalda",
     secondary: ["biceps"],
     equipment: "maquina",
-    cues: ["Pecho alto", "Tirar con los codos", "No balancear"],
+    cues: ["Lleva la barra hacia la parte superior del pecho manteniendo una ligera inclinación del torso hacia atrás sin balancearte."],
     defaultSets: 3,
     defaultReps: 8,
     restSec: 90,
@@ -173,11 +173,7 @@ export const EXERCISES: Exercise[] = [
     secondary: ["biceps"],
     equipment: "maquina",
     cues: [
-      "Pecho abierto y espalda neutra",
-      "Llevá los codos hacia atrás",
-      "Juntá las escápulas al final",
-      "No encorves la espalda",
-      "No uses impulso"
+      "Mantén el pecho firme contra el apoyo para no meter zona lumbar y saca la fuerza de las escápulas."
     ],
     defaultSets: 3,
     defaultReps: 8,
@@ -191,11 +187,7 @@ export const EXERCISES: Exercise[] = [
     secondary: ["biceps", "hombros"],
     equipment: "maquina",
     cues: [
-      "Pecho apoyado en el soporte",
-      "Espalda neutra",
-      "Tirá con los codos hacia atrás",
-      "Juntá las escápulas al final",
-      "Volvé controlando sin soltar el peso"
+      "Los codos abiertos en un ángulo de 45° a 60° respecto al cuerpo. Junta las escápulas al final de cada repetición."
     ],
     defaultSets: 3,
     defaultReps: 10,
@@ -210,11 +202,7 @@ export const EXERCISES: Exercise[] = [
     secondary: ["biceps"],
     equipment: "polea",
     cues: [
-      "Espalda neutra",
-      "Hombro abajo",
-      "Llevá el codo hacia atrás",
-      "No gires el torso",
-      "Volvé controlando"
+      "Lleva el codo hacia la cadera manteniendo el brazo pegado al torso y evita rotar el tronco al tirar."
     ],
     defaultSets: 3,
     defaultReps: 8,

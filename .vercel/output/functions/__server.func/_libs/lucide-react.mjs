@@ -92,9 +92,58 @@ var Activity = createLucideIcon("activity", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ArrowDown = createLucideIcon("arrow-down", [["path", {
+	d: "M12 5v14",
+	key: "s699le"
+}], ["path", {
+	d: "m19 12-7 7-7-7",
+	key: "1idqje"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ArrowUp = createLucideIcon("arrow-up", [["path", {
+	d: "m5 12 7-7 7 7",
+	key: "hav0vg"
+}], ["path", {
+	d: "M12 19V5",
+	key: "x0mq9r"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var CheckCheck = createLucideIcon("check-check", [["path", {
+	d: "M18 6 7 17l-5-5",
+	key: "116fxf"
+}], ["path", {
+	d: "m22 10-7.5 7.5L13 16",
+	key: "ke71qq"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Check = createLucideIcon("check", [["path", {
 	d: "M20 6 9 17l-5-5",
 	key: "1gmf2c"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ChevronDown = createLucideIcon("chevron-down", [["path", {
+	d: "m6 9 6 6 6-6",
+	key: "qrunsl"
 }]]);
 /**
 * @license lucide-react v0.510.0 - ISC
@@ -239,6 +288,30 @@ var Plus = createLucideIcon("plus", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Repeat = createLucideIcon("repeat", [
+	["path", {
+		d: "m17 2 4 4-4 4",
+		key: "nntrym"
+	}],
+	["path", {
+		d: "M3 11v-1a4 4 0 0 1 4-4h14",
+		key: "84bu3i"
+	}],
+	["path", {
+		d: "m7 22-4-4 4-4",
+		key: "1wqhfi"
+	}],
+	["path", {
+		d: "M21 13v1a4 4 0 0 1-4 4H3",
+		key: "1rx37r"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Replace = createLucideIcon("replace", [
 	["path", {
 		d: "M14 4a2 2 0 0 1 2-2",
@@ -301,6 +374,34 @@ var Search = createLucideIcon("search", [["path", {
 	r: "8",
 	key: "4ej97u"
 }]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Timer = createLucideIcon("timer", [
+	["line", {
+		x1: "10",
+		x2: "14",
+		y1: "2",
+		y2: "2",
+		key: "14vaq8"
+	}],
+	["line", {
+		x1: "12",
+		x2: "15",
+		y1: "14",
+		y2: "11",
+		key: "17fdiu"
+	}],
+	["circle", {
+		cx: "12",
+		cy: "14",
+		r: "8",
+		key: "1e1u0o"
+	}]
+]);
 /**
 * @license lucide-react v0.510.0 - ISC
 *
@@ -384,4 +485,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Check as _, Search as a, Plus as c, Minus as d, House as f, ChevronLeft as g, ChevronRight as h, Trash2 as i, Play as l, CirclePlus as m, User as n, RotateCcw as o, Dumbbell as p, TriangleAlert as r, Replace as s, X as t, Pause as u, Activity as v };
+export { ArrowDown as C, ArrowUp as S, ChevronRight as _, Timer as a, Check as b, Replace as c, Play as d, Pause as f, CirclePlus as g, Dumbbell as h, Trash2 as i, Repeat as l, House as m, User as n, Search as o, Minus as p, TriangleAlert as r, RotateCcw as s, X as t, Plus as u, ChevronLeft as v, Activity as w, CheckCheck as x, ChevronDown as y };

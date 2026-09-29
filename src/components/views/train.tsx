@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Play, Search } from "lucide-react";
 import { COVER_SRC } from "@/lib/routines";
 import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL, searchExercises } from "@/lib/exercises";
-import { LEVEL_LABEL, WEEKDAY_FULL, WEEKDAY_SHORT } from "@/lib/format";
+import { LEVEL_LABEL, formatWeight, WEEKDAY_FULL, WEEKDAY_SHORT } from "@/lib/format";
 import { useTrain } from "@/lib/store";
 import type { Muscle, Routine } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isoWeekday } from "@/lib/notify";
 import { TimerView } from "./timer";
 import { Button } from "../ui/button";
+import { Modal } from "../ui/modal";
 
 const MUSCLES: Array<Muscle | "todos"> = [
   "todos",
@@ -95,6 +96,7 @@ export function TrainView() {
                 key={r.id}
                 routine={r}
                 onStart={() => startRoutine(r)}
+                startLabel="Empezar"
                 extra={
                   (r.scheduleDays ?? []).length
                     ? (r.scheduleDays ?? []).map((d) => WEEKDAY_SHORT[d - 1]).join(" · ")
@@ -189,19 +191,24 @@ export function TrainView() {
 export function RoutineCard({
   routine,
   onStart,
+  onOpen,
   onDelete,
   onEdit,
   extra,
+  startLabel = "Entrenar",
 }: {
   routine: Routine;
   onStart: () => void;
+  /** When set, tapping the card opens a summary + this label replaces "Entrenar". */
+  onOpen?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
   extra?: string;
+  startLabel?: string;
 }) {
   return (
     <article className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-border)]">
-      <button type="button" onClick={onStart} className="block w-full text-left pressable">
+      <button type="button" onClick={onOpen ?? onStart} className="block w-full text-left pressable">
         <div className="relative h-28">
           <img
             src={COVER_SRC[routine.cover]}
@@ -225,8 +232,18 @@ export function RoutineCard({
           </div>
         </div>
       </button>
-      {onDelete || onEdit ? (
+      {onStart || onDelete || onEdit ? (
         <div className="flex items-center justify-end gap-1 px-3 pb-3">
+          {onStart ? (
+            <button
+              type="button"
+              onClick={onStart}
+              className="flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-accent pressable"
+            >
+              <Play className="size-4" />
+              {startLabel}
+            </button>
+          ) : null}
           {onEdit ? (
             <button
               type="button"
@@ -248,6 +265,92 @@ export function RoutineCard({
         </div>
       ) : null}
     </article>
+  );
+}
+
+/**
+ * Read-only summary of a routine — what the athlete will actually do, movement
+ * by movement — plus the way in. Tapping a routine should never dump somebody
+ * straight into a live session, so this sheet sits between the card and the
+ * start button, and the choice to train is explicit.
+ */
+export function RoutineSummary({
+  routine,
+  onClose,
+  onStart,
+}: {
+  routine: Routine;
+  onClose: () => void;
+  onStart: () => void;
+}) {
+  const unit = useTrain((s) => s.profile.unit);
+  const totalSets = routine.exercises.reduce((n, slot) => n + slot.sets, 0);
+  const days = routine.scheduleDays ?? [];
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={routine.name}
+      subtitle={routine.focus}
+      footer={
+        <Button block onClick={onStart}>
+          <Play className="size-4" />
+          Empezar rutina
+        </Button>
+      }
+    >
+      <div className="space-y-4">
+        <dl className="grid grid-cols-3 gap-2 text-center">
+          {[
+            [`${routine.exercises.length}`, "ejercicios"],
+            [`${totalSets}`, "series"],
+            [`${routine.durationMin}`, "min aprox."],
+          ].map(([value, label]) => (
+            <div key={label} className="rounded-xl bg-elevated px-2 py-3 shadow-[var(--shadow-border)]">
+              <dt className="sr-only">{label}</dt>
+              <dd className="font-display text-2xl leading-none tabular-nums">{value}</dd>
+              <dd className="mt-1 text-[11px] uppercase tracking-wider text-muted">{label}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <p className="text-sm text-muted">
+          {LEVEL_LABEL[routine.level]}
+          {" · "}
+          {days.length
+            ? `avisa los ${days.map((d) => WEEKDAY_SHORT[d - 1]).join(", ")}`
+            : "sin día asignado"}
+        </p>
+
+        <ul className="space-y-1.5">
+          {routine.exercises.map((slot, i) => {
+            const ex = getExercise(slot.exerciseId);
+            return (
+              <li
+                key={`${slot.exerciseId}-${i}`}
+                className="flex items-baseline gap-3 rounded-xl bg-surface px-3 py-2.5 shadow-[var(--shadow-border)]"
+              >
+                <span className="w-4 shrink-0 text-xs tabular-nums text-subtle">{i + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{ex.name}</span>
+                  <span className="block truncate text-xs text-muted">
+                    {MUSCLE_LABEL[ex.muscle]} · {EQUIPMENT_LABEL[ex.equipment]}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right text-xs tabular-nums text-muted">
+                  {slot.sets} × {slot.reps}
+                  <span className="block text-subtle">
+                    {slot.weightKg ? `${formatWeight(slot.weightKg, unit)} · ` : ""}
+                    {slot.restSec}s
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </Modal>
   );
 }
 

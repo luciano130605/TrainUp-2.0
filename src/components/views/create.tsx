@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Plus, Repeat, Trash2 } from "lucide-react";
 import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL } from "@/lib/exercises";
 import { formatWeight, WEEKDAY_SHORT } from "@/lib/format";
 import { planPlates, BAR_OPTIONS, PLATE_KG } from "@/lib/plates";
@@ -9,7 +9,7 @@ import { cn, uid } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Modal } from "../ui/modal";
 import { Stepper } from "../stepper";
-import { Library, RoutineCard } from "./train";
+import { Library, RoutineCard, RoutineSummary } from "./train";
 
 export function CreateView() {
   const extras = useTrain((s) => s.customRoutines);
@@ -18,6 +18,9 @@ export function CreateView() {
   const [mode, setMode] = useState<"rutinas" | "crear" | "barra">("rutinas");
   // Routine being edited; null while creating a new one.
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Routine whose summary sheet is open. Tapping a card here informs, it never
+  // throws the athlete straight into a session — that happens from Entrenar.
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   function openCreator(id: string | null) {
     setEditingId(id);
@@ -25,6 +28,7 @@ export function CreateView() {
   }
 
   const editing = editingId ? extras.find((r) => r.id === editingId) : undefined;
+  const preview = previewId ? extras.find((r) => r.id === previewId) : undefined;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -65,6 +69,8 @@ export function CreateView() {
                 key={r.id}
                 routine={r}
                 onStart={() => startRoutine(r)}
+                onOpen={() => setPreviewId(r.id)}
+                startLabel="Empezar ahora"
                 onEdit={() => openCreator(r.id)}
                 onDelete={() => deleteCustom(r.id)}
                 extra={
@@ -78,6 +84,17 @@ export function CreateView() {
           <Button variant="secondary" block onClick={() => openCreator(null)}>
             Nueva rutina
           </Button>
+
+          {preview ? (
+            <RoutineSummary
+              routine={preview}
+              onClose={() => setPreviewId(null)}
+              onStart={() => {
+                setPreviewId(null);
+                startRoutine(preview);
+              }}
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -107,6 +124,8 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
   // "new" while configuring a freshly picked exercise, a numeric index while
   // editing one already in the list, null while the sheet is closed.
   const [editing, setEditing] = useState<number | "new" | null>(null);
+  // Index of the slot whose exercise is being swapped for another movement.
+  const [swapIndex, setSwapIndex] = useState<number | null>(null);
 
   function add(id: string) {
     const ex = getExercise(id);
@@ -121,6 +140,28 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
 
   function updateSlot(index: number, patch: Partial<RoutineExercise>) {
     setPicked((prev) => prev.map((slot, i) => (i === index ? { ...slot, ...patch } : slot)));
+  }
+
+  /** Swap the movement but keep the sets/reps/rest/weight the athlete dialled in. */
+  function swapExercise(index: number, exerciseId: string) {
+    setPicked((prev) => prev.map((slot, i) => (i === index ? { ...slot, exerciseId } : slot)));
+    setSwapIndex(null);
+  }
+
+  /** Move a slot one position up (-1) or down (1) in the routine order. */
+  function moveSlot(index: number, delta: -1 | 1) {
+    setPicked((prev) => {
+      const target = index + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target]!, next[index]!];
+      return next;
+    });
+    // Keep the detail sheet attached to the slot the athlete was editing.
+    setEditing((prev) => {
+      if (prev === null || prev === "new") return prev;
+      return prev === index ? index + delta : prev;
+    });
   }
 
   function toggleDay(d: number) {
@@ -181,33 +222,64 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
           return (
             <li
               key={`${slot.exerciseId}-${i}`}
-              className="flex items-center gap-2 rounded-xl bg-surface pl-1 shadow-[var(--shadow-border)]"
+              className="rounded-xl bg-surface p-1 shadow-[var(--shadow-border)]"
             >
-              <button
-                type="button"
-                onClick={() => setEditing(i)}
-                className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-3 text-left pressable"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{ex.name}</span>
-                  <span className="block truncate text-xs tabular-nums text-muted">
-                    {MUSCLE_LABEL[ex.muscle]} · {EQUIPMENT_LABEL[ex.equipment]} ·{" "}
-                    {slot.sets} series × {slot.reps} reps
-                    {slot.weightKg ? ` · ${formatWeight(slot.weightKg, unit)}` : ""}
-                    {" · "}
-                    {slot.restSec}s
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(i)}
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-3 text-left pressable"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{ex.name}</span>
+                    <span className="block truncate text-xs tabular-nums text-muted">
+                      {MUSCLE_LABEL[ex.muscle]} · {EQUIPMENT_LABEL[ex.equipment]} ·{" "}
+                      {slot.sets} series × {slot.reps} reps
+                      {slot.weightKg ? ` · ${formatWeight(slot.weightKg, unit)}` : ""}
+                      {" · "}
+                      {slot.restSec}s
+                    </span>
                   </span>
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-muted" />
-              </button>
-              <button
-                type="button"
-                className="mr-1 flex size-10 shrink-0 items-center justify-center text-muted pressable"
-                onClick={() => setPicked((p) => p.filter((_, idx) => idx !== i))}
-                aria-label={`Quitar ${ex.name}`}
-              >
-                <Trash2 className="size-4" />
-              </button>
+                  <ChevronRight className="size-4 shrink-0 text-muted" />
+                </button>
+                <button
+                  type="button"
+                  className="mr-1 flex size-10 shrink-0 items-center justify-center text-muted pressable"
+                  onClick={() => setPicked((p) => p.filter((_, idx) => idx !== i))}
+                  aria-label={`Quitar ${ex.name}`}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-1 border-t border-line px-1 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setSwapIndex(i)}
+                  aria-label={`Reemplazar ${ex.name}`}
+                  className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-muted pressable"
+                >
+                  <Repeat className="size-4 shrink-0" />
+                  Reemplazar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSlot(i, -1)}
+                  disabled={i === 0}
+                  aria-label={`Subir ${ex.name}`}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-lg text-muted pressable disabled:opacity-30"
+                >
+                  <ArrowUp className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSlot(i, 1)}
+                  disabled={i === picked.length - 1}
+                  aria-label={`Bajar ${ex.name}`}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-lg text-muted pressable disabled:opacity-30"
+                >
+                  <ArrowDown className="size-4" />
+                </button>
+              </div>
             </li>
           );
         })}
@@ -228,6 +300,22 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
         subtitle="Después ajustás series, reps y peso."
       >
         <Library hideStartHint onPick={add} />
+      </Modal>
+
+      <Modal
+        open={swapIndex !== null}
+        onClose={() => setSwapIndex(null)}
+        title="Reemplazar"
+        subtitle={
+          swapIndex !== null
+            ? `${getExercise(picked[swapIndex]!.exerciseId).name} sale de la rutina; elegí el que entra y mantenés series, reps y peso.`
+            : undefined
+        }
+      >
+        <Library
+          hideStartHint
+          onPick={(id) => swapIndex !== null && swapExercise(swapIndex, id)}
+        />
       </Modal>
 
       <Modal
