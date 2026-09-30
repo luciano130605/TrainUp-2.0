@@ -294,7 +294,6 @@ export function RoutineSummary({
       subtitle={routine.focus}
       footer={
         <Button block onClick={onStart}>
-          <Play className="size-4" />
           Empezar rutina
         </Button>
       }
