@@ -61,10 +61,12 @@ function seedState() {
     };
   });
 
-  // A gentle downward trend so the chart has a readable slope.
-  const bodyLogs = dates
-    .map((d, i) => ({ date: iso(d), weightKg: 82.5 - i * 0.35 }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  // One distinct reading per month of the current year, so agosto and
+  // septiembre show their own value instead of an average.
+  const bodyLogs = Array.from({ length: m + 1 }, (_, mi) => ({
+    date: `${y}-${String(mi + 1).padStart(2, "0")}-01`,
+    weightKg: 84 - mi * 0.8,
+  }));
 
   return {
     state: {

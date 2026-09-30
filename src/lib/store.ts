@@ -52,6 +52,7 @@ type Store = GymSnapshot & {
   saveCustomRoutine: (routine: Routine) => void;
   deleteCustomRoutine: (id: string) => void;
   addBodyLog: (weightKg: number) => void;
+  setMonthWeight: (monthISO: string, weightKg: number) => void;
   setTimerMode: (mode: TimerMode) => void;
   resetAll: () => void;
 };
@@ -469,6 +470,20 @@ export const useTrain = create<Store>()(
           return {
             bodyLogs: [...rest, { date, weightKg }].sort((a, b) => a.date.localeCompare(b.date)),
             profile: { ...s.profile, bodyWeightKg: weightKg },
+          };
+        });
+        queueSave(get);
+      },
+      setMonthWeight: (monthISO, weightKg) => {
+        set((s) => {
+          // One reading per month: replace whatever was logged for it before.
+          const date = `${monthISO}-01`;
+          const rest = s.bodyLogs.filter((l) => !l.date.startsWith(monthISO));
+          const next = [...rest, { date, weightKg }].sort((a, b) => a.date.localeCompare(b.date));
+          const isCurrentMonth = monthISO === new Date().toISOString().slice(0, 7);
+          return {
+            bodyLogs: next,
+            profile: isCurrentMonth ? { ...s.profile, bodyWeightKg: weightKg } : s.profile,
           };
         });
         queueSave(get);

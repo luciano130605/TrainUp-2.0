@@ -3,8 +3,9 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { addMonths, format, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { getExercise } from "@/lib/exercises";
-import { formatVolume, formatWeight, formatDuration, toDisplayWeight } from "@/lib/format";
+import { formatVolume, formatWeight, formatDuration, fromDisplayWeight, toDisplayWeight } from "@/lib/format";
 import { useTrain } from "@/lib/store";
+import { Button } from "../ui/button";
 
 const DAY_LABELS = ["LU", "MA", "MI", "JU", "VI"];
 
@@ -21,6 +22,8 @@ export function ProgressView() {
   const records = useTrain((s) => s.records);
   const unit = useTrain((s) => s.profile.unit);
   const bodyLogs = useTrain((s) => s.bodyLogs);
+  const setMonthWeight = useTrain((s) => s.setMonthWeight);
+  const [draftMonth, setDraftMonth] = useState<Record<string, string>>({});
   const [offset, setOffset] = useState(0);
 
   const today = useMemo(() => new Date(), []);
@@ -87,7 +90,8 @@ export function ProgressView() {
   const trainedCount = calendar.filter((c) => c.trained).length;
 
   // ── Peso corporal · mes seleccionado ────────────────────────────────────────
-  // Peso corporal: vista anual (ene a dic)
+  // Peso corporal: vista anual (ene a dic). Cada mes guarda UN peso puntual
+  // que el atleta puede editar, asi agosto y septiembre tienen su propio valor.
   const yearLabel = String(anchor.getFullYear());
 
   const bodyData = useMemo(() => {
@@ -95,23 +99,29 @@ export function ProgressView() {
     const lastMonth = year === today.getFullYear() ? today.getMonth() : 11;
     const mk = (mi: number) => `${year}-${String(mi + 1).padStart(2, "0")}`;
     return Array.from({ length: lastMonth + 1 }, (_, mi) => {
-      const logs = bodyLogs
-        .filter((l) => monthKey(new Date(`${l.date}T12:00:00`)) === mk(mi))
-        .sort((a, b) => a.date.localeCompare(b.date));
       const entry: { mes: string; peso?: number } = {
         mes: capitalize(format(new Date(year, mi, 1), "LLL", { locale: es }).replace(".", "")),
       };
-      if (logs.length > 0) {
-        // Monthly average keeps the yearly line readable regardless of how many
-        // times the athlete stepped on the scale that month.
-        entry.peso = toDisplayWeight(
-          logs.reduce((s, l) => s + l.weightKg, 0) / logs.length,
-          unit,
-        );
-      }
+      const log = bodyLogs.find((l) => l.date.startsWith(mk(mi)));
+      if (log) entry.peso = toDisplayWeight(log.weightKg, unit);
       return entry;
     });
   }, [bodyLogs, anchor, today, unit]);
+
+  // One editable row per month of the shown year.
+  const monthRows = useMemo(() => {
+    const year = anchor.getFullYear();
+    const lastMonth = year === today.getFullYear() ? today.getMonth() : 11;
+    return Array.from({ length: lastMonth + 1 }, (_, mi) => {
+      const iso = `${year}-${String(mi + 1).padStart(2, "0")}`;
+      const log = bodyLogs.find((l) => l.date.startsWith(iso));
+      return {
+        iso,
+        label: capitalize(format(new Date(year, mi, 1), "LLLL", { locale: es })),
+        weightKg: log?.weightKg ?? null,
+      };
+    });
+  }, [bodyLogs, anchor, today]);
 
   const yearLogs = bodyLogs
     .filter((l) => new Date(`${l.date}T12:00:00`).getFullYear() === anchor.getFullYear())
@@ -119,6 +129,13 @@ export function ProgressView() {
   const yearStartWeight = yearLogs[0];
   const yearEndWeight = yearLogs.at(-1);
   const yearWeight = yearEndWeight ?? bodyLogs.at(-1);
+
+  function saveMonthWeight(monthISO: string) {
+    const n = Number((draftMonth[monthISO] ?? "").replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) return;
+    setMonthWeight(monthISO, fromDisplayWeight(n, unit));
+    setDraftMonth((d) => ({ ...d, [monthISO]: "" }));
+  }
 
   const totalVol = history.reduce((s, h) => s + h.volumeKg, 0);
 
@@ -272,7 +289,38 @@ export function ProgressView() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <p className="mt-3 text-[11px] text-muted">Promedio mensual · registrá tu peso desde el Perfil.</p>
+        <p className="mt-3 text-[11px] text-muted">Un peso por mes · editá el que quieras abajo.</p>
+
+        <ul className="mt-3 divide-y divide-[var(--tu-line)] border-t border-[var(--tu-line)]">
+          {monthRows.map((row) => (
+            <li key={row.iso} className="flex items-center gap-2 py-2">
+              <span className="w-24 shrink-0 text-sm capitalize text-muted">{row.label}</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={draftMonth[row.iso] ?? ""}
+                onChange={(e) => setDraftMonth((d) => ({ ...d, [row.iso]: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveMonthWeight(row.iso);
+                }}
+                placeholder={
+                  row.weightKg != null ? String(toDisplayWeight(row.weightKg, unit)) : "—"
+                }
+                className="min-w-0 flex-1 rounded-lg bg-elevated px-3 py-2 text-sm tabular-nums shadow-[var(--shadow-border)] outline-none focus:shadow-[var(--shadow-border-hover)]"
+              />
+              <span className="w-6 shrink-0 text-xs text-muted">{unit}</span>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => saveMonthWeight(row.iso)}
+                disabled={!(draftMonth[row.iso] ?? "").trim()}
+              >
+                OK
+              </Button>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section>
