@@ -1,32 +1,29 @@
 /**
  * Progress QA: seeds an onboarded account with sessions on real training days of
- * the current month plus body-weight logs spread across the month, opens the
- * Progress tab, expands the body-weight window (7d → 30d → 1y) and screenshots
- * it on a phone and a laptop.
+ * the current month plus one body-weight reading per month, screenshots Home and
+ * the Progress tab on a phone and a laptop.
  *
- *   node scripts/qa-progress.mjs
- *
- * Writes /screenshots/progress-{mobile,desktop}.png and prints a JSON verdict.
+ *   node scripts/qa-progress.mjs [url] [outPng]
  */
 import { existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { chromium } from "playwright";
 import { checkedUrl } from "./browser-guard.mjs";
 
-const URL = checkedUrl(process.env.QA_URL || "http://127.0.0.1:8080/");
-// browser-guard only allows output under /workspace; on Windows that maps to the
-// drive root, so fall back to a workspace-relative folder when it exists.
-const OUT = existsSync("/workspace/screenshots") ? "/workspace/screenshots" : "screenshots";
+const URL = checkedUrl(process.argv[2] || process.env.QA_URL || "http://127.0.0.1:8080/");
+const OUT = process.argv[3] || "screenshots/progress.png";
+mkdirSync(dirname(OUT), { recursive: true });
 
 const now = new Date();
 const y = now.getFullYear();
 const m = now.getMonth();
-const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const iso = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/** Every weekday of the current month up to today, plus a weight log on each. */
+/** Every weekday of the current month up to today. */
 function currentMonthDates() {
   const out = [];
-  const last = now.getDate();
-  for (let day = 1; day <= last; day++) {
+  for (let day = 1; day <= now.getDate(); day++) {
     const d = new Date(y, m, day);
     const wd = d.getDay();
     if (wd === 0 || wd === 6) continue;
@@ -61,8 +58,7 @@ function seedState() {
     };
   });
 
-  // One distinct reading per month of the current year, so agosto and
-  // septiembre show their own value instead of an average.
+  // One distinct reading per month: agosto y septiembre conservan su valor.
   const bodyLogs = Array.from({ length: m + 1 }, (_, mi) => ({
     date: `${y}-${String(mi + 1).padStart(2, "0")}-01`,
     weightKg: 84 - mi * 0.8,
@@ -87,6 +83,9 @@ function seedState() {
       history: sessions.sort((a, b) => b.endedAt - a.endedAt),
       records: [
         { exerciseId: "press-banca", weightKg: 92.5, reps: 6, e1rm: 111, date: iso(dates.at(-1)) },
+        { exerciseId: "sentadilla", weightKg: 120, reps: 5, e1rm: 140, date: iso(dates.at(-1)) },
+        { exerciseId: "peso-muerto", weightKg: 140, reps: 3, e1rm: 154, date: iso(dates.at(-1)) },
+        { exerciseId: "remo-barra", weightKg: 80, reps: 8, e1rm: 101, date: iso(dates.at(-1)) },
       ],
       bodyLogs,
       session: null,
@@ -95,13 +94,6 @@ function seedState() {
     version: 1,
   };
 }
-
-const VIEWPORTS = [
-  { name: "mobile", width: 390, height: 844 },
-  { name: "desktop", width: 1280, height: 800 },
-];
-
-mkdirSync(OUT, { recursive: true });
 
 const CHROME_CANDIDATES = [
   process.env.QA_CHROME,
@@ -129,7 +121,10 @@ const browser = await chromium.launch({
 const verdict = { url: URL, viewports: {} };
 
 try {
-  for (const vp of VIEWPORTS) {
+  for (const vp of [
+    { name: "mobile", width: 390, height: 844 },
+    { name: "desktop", width: 1280, height: 800 },
+  ]) {
     const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
     const consoleErrors = [];
     const pageErrors = [];
@@ -145,7 +140,14 @@ try {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForTimeout(2000);
 
-    // Walk into the Progress tab the way a person would.
+    // Home first — the screen most people land on.
+    const homeText = await page.locator("body").innerText().catch(() => "");
+    const homeOverflow = await page.evaluate(() => {
+      const el = document.documentElement;
+      return el.scrollWidth > el.clientWidth + 1;
+    });
+    await page.screenshot({ path: OUT.replace(/\.png$/, `-home-${vp.name}.png`), fullPage: false });
+
     const progressTab = page.getByRole("button", { name: /progreso/i }).first();
     if (await progressTab.count()) {
       await progressTab.click();
@@ -160,43 +162,27 @@ try {
       .locator(".recharts-xAxis .recharts-cartesian-axis-tick-value")
       .allInnerTexts()
       .catch(() => []);
-    const hasAreaPath = await weightSection
-      .locator(".recharts-area, .recharts-area-curve")
-      .count()
-      .catch(() => 0);
-
-    // Step back a full year to prove the yearly window navigates.
-    const prev = page.getByRole("button", { name: "Mes anterior" }).first();
-    let prevYearTicks = [];
-    if (await prev.count()) {
-      for (let i = 0; i < 12; i++) {
-        await prev.click();
-      }
-      await page.waitForTimeout(1200);
-      prevYearTicks = await page
-        .locator("section", { hasText: "Peso corporal" })
-        .first()
-        .locator(".recharts-xAxis .recharts-cartesian-axis-tick-value")
-        .allInnerTexts()
-        .catch(() => []);
-    }
+    const prSection = page.locator("section", { hasText: "Marcas personales" }).first();
+    const prText = await prSection.innerText().catch(() => "");
 
     const overflow = await page.evaluate(() => {
       const el = document.documentElement;
       return el.scrollWidth > el.clientWidth + 1;
     });
     const text = await page.locator("body").innerText().catch(() => "");
-    await page.screenshot({ path: `${OUT}/progress-${vp.name}.png`, fullPage: false });
+    await page.screenshot({ path: OUT.replace(/\.png$/, `-${vp.name}.png`), fullPage: true });
+
     verdict.viewports[vp.name] = {
       ...vp,
       overflow,
+      homeOverflow,
       consoleErrors,
       pageErrors,
+      homeText: homeText.slice(0, 500),
       weightText,
       monthTicks,
-      prevYearTicks,
-      hasAreaPath,
-      text: text.slice(0, 1200),
+      prText,
+      text: text.slice(0, 1500),
     };
     await page.close();
   }

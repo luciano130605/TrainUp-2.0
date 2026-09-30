@@ -1,15 +1,30 @@
-import { Activity, CirclePlus, Dumbbell, House, PlusSquare, User } from "lucide-react";
+import {
+  Activity,
+  CirclePlus,
+  Dumbbell,
+  House,
+  User,
+} from "lucide-react";
+
 import type { Tab } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useKeyboardOpen } from "@/lib/keyboard";
+import { AddFillIcon, AddIcon, HomeFillIcon, HomeIcon, ProgressFillIcon, ProgressIcon, RunFillIcon, RunIcon, UserFillIcon, UserIcon } from "./ui/icons";
 
-export const TAB_ITEMS: { id: Tab; label: string; icon: typeof House }[] = [
-  { id: "home", label: "Inicio", icon: House },
-  { id: "train", label: "Entrenar", icon: Dumbbell },
-  { id: "create", label: "Crear", icon: CirclePlus },
-  { id: "progress", label: "Progreso", icon: Activity },
-  { id: "profile", label: "Yo", icon: User },
-];
+type TabIcon = typeof HomeIcon;
+
+export const TAB_ITEMS: {
+  id: Tab;
+  label: string;
+  icon: TabIcon;
+  iconFill?: TabIcon;
+}[] = [
+    { id: "home", label: "Inicio", icon: HomeIcon, iconFill: HomeFillIcon },
+    { id: "train", label: "Entrenar", icon: RunIcon, iconFill: RunFillIcon },
+    { id: "create", label: "Crear", icon: AddIcon, iconFill: AddFillIcon },
+    { id: "progress", label: "Progreso", icon: ProgressIcon, iconFill: ProgressFillIcon },
+    { id: "profile", label: "Yo", icon: UserIcon, iconFill: UserFillIcon },
+  ];
 
 export function TabBar({
   tab,
@@ -20,8 +35,6 @@ export function TabBar({
   onChange: (tab: Tab) => void;
   className?: string;
 }) {
-  // The on-screen keyboard covers the bar instead of moving it. Hiding it while
-  // typing keeps the input the athlete is editing visible.
   const typing = useKeyboardOpen();
 
   return (
@@ -36,7 +49,11 @@ export function TabBar({
       <ul className="grid grid-cols-5">
         {TAB_ITEMS.map((item) => {
           const active = tab === item.id;
-          const Icon = item.icon;
+
+          const Icon = active
+            ? (item.iconFill ?? item.icon)
+            : item.icon;
+
           return (
             <li key={item.id}>
               <button
@@ -47,8 +64,13 @@ export function TabBar({
                   active ? "text-accent" : "text-muted",
                 )}
               >
-                <Icon className="size-5" strokeWidth={active ? 2.4 : 1.8} />
-                <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
+                <Icon
+                  className="size-5"
+                />
+
+                <span className="text-[10px] font-medium tracking-wide">
+                  {item.label}
+                </span>
               </button>
             </li>
           );

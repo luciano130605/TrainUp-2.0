@@ -1,0 +1,44 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "mobile": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "homeOverflow": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "[vite] Failed to reload /src/components/tab-bar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[vite] ReferenceError: D is not defined\n    at http://127.0.0.1:8080/src/components/tab-bar.tsx?t=1790733679557:18:13",
+        "[vite] Failed to reload /src/components/tab-bar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[vite] ReferenceError: Circ is not defined\n    at http://127.0.0.1:8080/src/components/tab-bar.tsx?t=1790733686554:24:13",
+        "[vite] Failed to reload /src/components/tab-bar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[vite] ReferenceError: CirclePlusc is not defined\n    at http://127.0.0.1:8080/src/components/tab-bar.tsx?t=1790733687581:24:13",
+        "[vite] Failed to reload /src/components/tab-bar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[vite] ReferenceError: CirclePlusc is not defined\n    at http://127.0.0.1:8080/src/components/tab-bar.tsx?t=1790733690353:24:13",
+        "[vite] Failed to reload /src/components/tab-bar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)"
+      ],
+      "pageErrors": [],
+      "homeText": "TRAIN\nUP\nEntrar\nCrear cuenta\nEMAIL\nCONTRASEÑA\nEntrar\nO CON REDES\nGoogle\nX",
+      "weightText": "",
+      "monthTicks": [],
+      "prText": "",
+      "text": "TRAIN\nUP\nEntrar\nCrear cuenta\nEMAIL\nCONTRASEÑA\nEntrar\nO CON REDES\nGoogle\nX"
+    },
+    "desktop": {
+      "name": "desktop",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "homeOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "homeText": "TRAIN\nUP\nEntrar\nCrear cuenta\nEMAIL\nCONTRASEÑA\nEntrar\nO CON REDES\nGoogle\nX",
+      "weightText": "",
+      "monthTicks": [],
+      "prText": "",
+      "text": "TRAIN\nUP\nEntrar\nCrear cuenta\nEMAIL\nCONTRASEÑA\nEntrar\nO CON REDES\nGoogle\nX"
+    }
+  }
+}
