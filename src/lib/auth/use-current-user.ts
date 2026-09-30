@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from "react";
 import { authClient, authEnabled } from "./client";
+import { TEST_USER, isTestMode, subscribeTestMode } from "./test-user";
 
 /** Normalized user shape used across the app, auth on or off. */
 export type AppUser = {
@@ -31,6 +33,11 @@ export type CurrentUserState = {
   user: AppUser | null;
   /** True while the session is still resolving — don't treat `user: null` as signed out yet. */
   isPending: boolean;
+  /**
+   * True while the app is running in the local TEST MODE: signed in as
+   * `TEST_USER`, with no read or write against the database.
+   */
+  testMode: boolean;
 };
 
 /**
@@ -55,9 +62,17 @@ export type CurrentUserState = {
  * call keeps a stable hook order across every render of a given component.
  */
 export function useCurrentUserState(): CurrentUserState {
-  if (!authEnabled) return { user: DEV_USER, isPending: false };
-  // eslint-disable-next-line react-hooks/rules-of-hooks -- authEnabled is constant for the app's lifetime
+  // Hooks must run UNCONDITIONALLY and in the same order on every render, so
+  // both are always called and the branches below only pick which result wins.
+  const testMode = useSyncExternalStore(subscribeTestMode, isTestMode, () => false);
   const { data, isPending } = authClient.useSession();
+
+  // Test mode wins over everything: it signs the visitor in locally and the app
+  // must never reach the database while it is on.
+  if (testMode) {
+    return { user: TEST_USER, isPending: false, testMode: true };
+  }
+  if (!authEnabled) return { user: DEV_USER, isPending: false, testMode: false };
   const user = data?.user;
   return {
     user: user
@@ -70,6 +85,7 @@ export function useCurrentUserState(): CurrentUserState {
         }
       : null,
     isPending,
+    testMode: false,
   };
 }
 

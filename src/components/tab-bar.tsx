@@ -1,11 +1,3 @@
-import {
-  Activity,
-  CirclePlus,
-  Dumbbell,
-  House,
-  User,
-} from "lucide-react";
-
 import type { Tab } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useKeyboardOpen } from "@/lib/keyboard";
@@ -59,18 +51,24 @@ export function TabBar({
               <button
                 type="button"
                 onClick={() => onChange(item.id)}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-13 w-full flex-col items-center justify-center gap-0.5 rounded-md pressable",
+                  "flex h-14 w-full flex-col items-center justify-center gap-1 rounded-xl pressable",
                   active ? "text-accent" : "text-muted",
                 )}
               >
-                <Icon
-                  className="size-5"
-                />
+                <Icon className="size-[22px]" />
 
-                <span className="text-[10px] font-medium tracking-wide">
+                <span className={cn("text-[10px] tracking-wide", active ? "font-semibold" : "font-medium")}>
                   {item.label}
                 </span>
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-0.5 w-5 rounded-full transition-opacity",
+                    active ? "bg-accent opacity-100" : "opacity-0",
+                  )}
+                />
               </button>
             </li>
           );

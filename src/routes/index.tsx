@@ -13,6 +13,7 @@ import { SessionView } from "@/components/views/session";
 import { ProgressView } from "@/components/views/progress";
 import { ProfileView } from "@/components/views/profile";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { isTestMode } from "@/lib/auth/test-user";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { loadGymState, saveGymState } from "@/lib/data";
 import { applyTheme } from "@/lib/theme";
@@ -75,6 +76,9 @@ function Home() {
 
   useEffect(() => {
     applyLowPowerClass();
+    // Test mode is local-only: never wire the persist bridge, so no snapshot can
+    // reach the database while it is on.
+    if (isTestMode()) return;
     bindGymPersist((snap) => saveGymState({ data: snap }));
   }, []);
 
@@ -104,6 +108,12 @@ function Home() {
       if (rest && rest < Date.now()) skipRest();
       if (!userId || loadedFor.current !== null) {
         // Signed out, or this account is already loaded: nothing remote to fetch.
+        useTrain.getState().markHydrated();
+        return;
+      }
+      if (isTestMode()) {
+        // Prueba: hydrate from localStorage only — no server round-trip at all.
+        loadedFor.current = userId;
         useTrain.getState().markHydrated();
         return;
       }

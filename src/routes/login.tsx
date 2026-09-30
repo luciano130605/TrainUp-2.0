@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { enableTestModeAndNotify } from "@/lib/auth/test-user";
 import { Button } from "@/components/ui/button";
 import { Mark } from "@/components/mark";
 import { cn } from "@/lib/utils";
@@ -59,15 +60,22 @@ function Login() {
     }
   }
 
-  async function social(providerId: string) {
+  function social(providerId: string) {
     setError(null);
     setSocialBusy(providerId);
-    try {
-      await signIn(providerId, { callbackURL: "/", errorCallbackURL: "/login" });
-    } catch (err) {
+    void signIn(providerId, { callbackURL: "/", errorCallbackURL: "/login" }).catch((err) => {
       setError(err instanceof Error ? err.message : "No se pudo entrar con esa red");
       setSocialBusy(null);
-    }
+    });
+  }
+
+  /**
+   * Modo prueba: entra al instante como usuario local. No crea cuenta ni toca
+   * la base — el progreso vive solo en este dispositivo.
+   */
+  function enterAsGuest() {
+    enableTestModeAndNotify();
+    void navigate({ to: "/" });
   }
 
   return (
@@ -164,6 +172,19 @@ function Login() {
           ) : (
             <p className="text-sm text-muted">El acceso con redes está desactivado.</p>
           )}
+
+          <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-wider text-muted">
+            <span className="h-px flex-1 bg-line" />
+            o probá sin cuenta
+            <span className="h-px flex-1 bg-line" />
+          </div>
+
+          <Button type="button" variant="secondary" block onClick={enterAsGuest}>
+            Entrar como invitado
+          </Button>
+          <p className="mt-2 text-center text-[11px] text-muted">
+            Modo prueba: no se guarda nada en la nube, solo en este dispositivo.
+          </p>
         </div>
       </div>
     </main>

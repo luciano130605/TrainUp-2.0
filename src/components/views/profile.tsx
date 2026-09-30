@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import { Mark } from "../mark";
 import { Switch } from "../ui/switch";
 import { useCurrentUser, useCurrentUserState } from "@/lib/auth/use-current-user";
+import { disableTestModeAndNotify } from "@/lib/auth/test-user";
 import { authEnabled, signOut } from "@/lib/auth/client";
 import { hasGateSessionMarker } from "@/lib/auth/gate-session-marker";
 import { deleteAccountData } from "@/lib/data";
@@ -26,7 +27,7 @@ export function ProfileView() {
   const addBodyLog = useTrain((s) => s.addBodyLog);
   const resetAll = useTrain((s) => s.resetAll);
   const user = useCurrentUser();
-  const { isPending } = useCurrentUserState();
+  const { isPending, testMode } = useCurrentUserState();
   const [weight, setWeight] = useState(String(toDisplayWeight(profile.bodyWeightKg, profile.unit)));
   const [height, setHeight] = useState(String(profile.heightCm));
   const [confirmWipe, setConfirmWipe] = useState(false);
@@ -74,6 +75,12 @@ export function ProfileView() {
     }
   }
 
+  /** Sale del modo prueba y vuelve al login, sin tocar la cuenta real. */
+  function exitTestMode() {
+    disableTestModeAndNotify();
+    if (typeof window !== "undefined") window.location.href = "/login";
+  }
+
   return (
     <div className="space-y-7 pb-10">
       <header className="flex items-center gap-4">
@@ -84,14 +91,30 @@ export function ProfileView() {
             <Mark />
           )}
         </div>
-        <div>
-          <h1 className="font-display text-4xl leading-none tracking-tight">{profile.name}</h1>
-          <p className="mt-1 text-sm text-muted">
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-3xl leading-none tracking-tight">
+            {profile.name}
+          </h1>
+          <p className="mt-1 truncate text-xs text-muted">
             {GOAL_LABEL[profile.goal]} · {LEVEL_LABEL[profile.level]} · {history.length} sesiones
           </p>
-          {user?.primaryEmail ? <p className="text-xs text-subtle">{user.primaryEmail}</p> : null}
+          {user?.primaryEmail ? (
+            <p className="truncate text-[11px] text-subtle">{user.primaryEmail}</p>
+          ) : null}
         </div>
       </header>
+
+      {testMode ? (
+        <section className="rounded-xl bg-elevated px-3.5 py-3 shadow-[var(--shadow-border)]">
+          <p className="text-[10px] uppercase tracking-wider text-accent">Modo prueba</p>
+          <p className="mt-1 text-xs text-muted">
+            Estás como invitado. El progreso se guarda solo acá, no en la nube.
+          </p>
+          <Button type="button" variant="secondary" size="sm" className="mt-2" onClick={exitTestMode}>
+            Salir del modo prueba
+          </Button>
+        </section>
+      ) : null}
 
       <Field label="Nombre">
         <input

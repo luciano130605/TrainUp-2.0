@@ -28,7 +28,7 @@ export function AppShell({
             </div>
             <nav className="mt-8 flex flex-col gap-1">
               {TAB_ITEMS.map((item) => {
-                const Icon = item.icon;
+                const Icon = tab === item.id ? (item.iconFill ?? item.icon) : item.icon;
                 const active = tab === item.id;
                 return (
                   <button
@@ -40,7 +40,7 @@ export function AppShell({
                       active ? "bg-elevated text-fg" : "text-muted hover:bg-elevated/60 hover:text-fg",
                     )}
                   >
-                    <Icon className="size-4" strokeWidth={active ? 2.4 : 1.8} />
+                    <Icon className="size-4" />
                     {item.label}
                   </button>
                 );
