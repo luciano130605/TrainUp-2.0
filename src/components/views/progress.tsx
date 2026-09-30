@@ -87,25 +87,38 @@ export function ProgressView() {
   const trainedCount = calendar.filter((c) => c.trained).length;
 
   // ── Peso corporal · mes seleccionado ────────────────────────────────────────
+  // Peso corporal: vista anual (ene a dic)
+  const yearLabel = String(anchor.getFullYear());
+
   const bodyData = useMemo(() => {
-    const logMap = new Map(bodyLogs.map((l) => [l.date, l.weightKg]));
-    const sameMonth = monthKey(anchor) === monthKey(today);
-    const lastDay = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
-    const days = sameMonth ? today.getDate() : lastDay;
-    return Array.from({ length: days }, (_, i) => {
-      const day = i + 1;
-      const key = `${monthKey(anchor)}-${String(day).padStart(2, "0")}`;
-      const entry: { day: string; peso?: number } = { day: String(day) };
-      const kg = logMap.get(key);
-      if (kg != null) entry.peso = toDisplayWeight(kg, unit);
+    const year = anchor.getFullYear();
+    const lastMonth = year === today.getFullYear() ? today.getMonth() : 11;
+    const mk = (mi: number) => `${year}-${String(mi + 1).padStart(2, "0")}`;
+    return Array.from({ length: lastMonth + 1 }, (_, mi) => {
+      const logs = bodyLogs
+        .filter((l) => monthKey(new Date(`${l.date}T12:00:00`)) === mk(mi))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const entry: { mes: string; peso?: number } = {
+        mes: capitalize(format(new Date(year, mi, 1), "LLL", { locale: es }).replace(".", "")),
+      };
+      if (logs.length > 0) {
+        // Monthly average keeps the yearly line readable regardless of how many
+        // times the athlete stepped on the scale that month.
+        entry.peso = toDisplayWeight(
+          logs.reduce((s, l) => s + l.weightKg, 0) / logs.length,
+          unit,
+        );
+      }
       return entry;
     });
   }, [bodyLogs, anchor, today, unit]);
 
-  const monthLogs = bodyLogs.filter((l) => monthKey(new Date(`${l.date}T12:00:00`)) === monthKey(anchor));
-  const monthStartWeight = monthLogs[0];
-  const monthEndWeight = monthLogs.at(-1);
-  const monthWeight = monthEndWeight ?? bodyLogs.at(-1);
+  const yearLogs = bodyLogs
+    .filter((l) => new Date(`${l.date}T12:00:00`).getFullYear() === anchor.getFullYear())
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const yearStartWeight = yearLogs[0];
+  const yearEndWeight = yearLogs.at(-1);
+  const yearWeight = yearEndWeight ?? bodyLogs.at(-1);
 
   const totalVol = history.reduce((s, h) => s + h.volumeKg, 0);
 
@@ -208,15 +221,15 @@ export function ProgressView() {
 
       <section className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-border)]">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Peso corporal · {monthLabel}</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted">Peso corporal · año {yearLabel}</p>
           <p className="flex items-baseline gap-2 text-sm font-medium tabular-nums">
-            {monthWeight ? formatWeight(monthWeight.weightKg, unit) : "—"}
-            {monthStartWeight && monthEndWeight && monthStartWeight !== monthEndWeight ? (
-              <span className={monthEndWeight.weightKg <= monthStartWeight.weightKg ? "text-accent" : "text-warn"}>
-                {monthEndWeight.weightKg <= monthStartWeight.weightKg ? "▼" : "▲"}{" "}
+            {yearWeight ? formatWeight(yearWeight.weightKg, unit) : "—"}
+            {yearStartWeight && yearEndWeight && yearStartWeight !== yearEndWeight ? (
+              <span className={yearEndWeight.weightKg <= yearStartWeight.weightKg ? "text-accent" : "text-warn"}>
+                {yearEndWeight.weightKg <= yearStartWeight.weightKg ? "▼" : "▲"}{" "}
                 {Math.abs(
-                  toDisplayWeight(monthEndWeight.weightKg, unit) -
-                    toDisplayWeight(monthStartWeight.weightKg, unit),
+                  toDisplayWeight(yearEndWeight.weightKg, unit) -
+                    toDisplayWeight(yearStartWeight.weightKg, unit),
                 ).toFixed(1)}
               </span>
             ) : null}
@@ -231,7 +244,7 @@ export function ProgressView() {
                   <stop offset="100%" stopColor="var(--tu-accent)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="day" tick={{ fill: "var(--tu-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="mes" tick={{ fill: "var(--tu-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis
                 domain={["dataMin - 1", "dataMax + 1"]}
                 tick={{ fill: "var(--tu-muted)", fontSize: 11 }}
@@ -259,7 +272,7 @@ export function ProgressView() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <p className="mt-3 text-[11px] text-muted">Registrá tu peso desde el Perfil.</p>
+        <p className="mt-3 text-[11px] text-muted">Promedio mensual · registrá tu peso desde el Perfil.</p>
       </section>
 
       <section>

@@ -13,7 +13,9 @@ import { chromium } from "playwright";
 import { checkedUrl } from "./browser-guard.mjs";
 
 const URL = checkedUrl(process.env.QA_URL || "http://127.0.0.1:8080/");
-const OUT = "screenshots";
+// browser-guard only allows output under /workspace; on Windows that maps to the
+// drive root, so fall back to a workspace-relative folder when it exists.
+const OUT = existsSync("/workspace/screenshots") ? "/workspace/screenshots" : "screenshots";
 
 const now = new Date();
 const y = now.getFullYear();
@@ -148,29 +150,33 @@ try {
     } else {
       await page.getByText("Progreso", { exact: true }).first().click().catch(() => { });
     }
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1500);
 
-    // Toggle the body-weight window through each range, then back to 1 month.
-    const ranges = ["7 días", "30 días", "1 año"];
-    const rangeText = {};
-    for (const label of ranges) {
-      const btn = page.getByRole("button", { name: label }).first();
-      if (!(await btn.count())) {
-        rangeText[label] = null;
-        continue;
+    const weightSection = page.locator("section", { hasText: "Peso corporal" }).first();
+    const weightText = await weightSection.innerText().catch(() => "");
+    const monthTicks = await weightSection
+      .locator(".recharts-xAxis .recharts-cartesian-axis-tick-value")
+      .allInnerTexts()
+      .catch(() => []);
+    const hasAreaPath = await weightSection
+      .locator(".recharts-area, .recharts-area-curve")
+      .count()
+      .catch(() => 0);
+
+    // Step back a full year to prove the yearly window navigates.
+    const prev = page.getByRole("button", { name: "Mes anterior" }).first();
+    let prevYearTicks = [];
+    if (await prev.count()) {
+      for (let i = 0; i < 12; i++) {
+        await prev.click();
       }
-      await btn.click();
-      await page.waitForTimeout(900);
-      rangeText[label] = await page
+      await page.waitForTimeout(1200);
+      prevYearTicks = await page
         .locator("section", { hasText: "Peso corporal" })
         .first()
-        .innerText()
-        .catch(() => "");
-    }
-    const monthBtn = page.getByRole("button", { name: "1 mes" }).first();
-    if (await monthBtn.count()) {
-      await monthBtn.click();
-      await page.waitForTimeout(900);
+        .locator(".recharts-xAxis .recharts-cartesian-axis-tick-value")
+        .allInnerTexts()
+        .catch(() => []);
     }
 
     const overflow = await page.evaluate(() => {
@@ -184,7 +190,10 @@ try {
       overflow,
       consoleErrors,
       pageErrors,
-      rangeText,
+      weightText,
+      monthTicks,
+      prevYearTicks,
+      hasAreaPath,
       text: text.slice(0, 1200),
     };
     await page.close();
