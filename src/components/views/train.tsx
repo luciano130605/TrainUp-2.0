@@ -210,12 +210,7 @@ export function RoutineCard({
     <article className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-border)]">
       <button type="button" onClick={onOpen ?? onStart} className="block w-full text-left pressable">
         <div className="relative h-28">
-          <img
-            src={COVER_SRC[routine.cover]}
-            alt=""
-            className="media h-full w-full object-cover"
-            decoding="async"
-          />
+       
           <div className="absolute inset-0 bg-linear-to-t from-surface to-transparent" />
         </div>
         <div className="px-4 pb-4 pt-2">
