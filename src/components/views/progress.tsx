@@ -29,7 +29,7 @@ export function ProgressView() {
 
   const heat = useMemo(() => {
     const set = new Set(history.map((h) => format(h.endedAt, "yyyy-MM-dd")));
-    return Array.from({ length: 84 }, (_, i) => {
+    return Array.from({ length: 28 }, (_, i) => {
       const d = subDays(new Date(), 83 - i);
       const key = format(d, "yyyy-MM-dd");
       return { key, on: set.has(key) };
