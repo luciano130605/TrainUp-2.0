@@ -209,10 +209,7 @@ export function RoutineCard({
   return (
     <article className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-border)]">
       <button type="button" onClick={onOpen ?? onStart} className="block w-full text-left pressable">
-        <div className="relative h-28">
-       
-          <div className="absolute inset-0 bg-linear-to-t from-surface to-transparent" />
-        </div>
+
         <div className="px-4 pb-4 pt-2">
           <div className="flex items-start justify-between gap-3">
             <div>
