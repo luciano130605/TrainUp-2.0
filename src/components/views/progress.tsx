@@ -14,7 +14,7 @@ export function ProgressView() {
 
   const weekData = useMemo(() => {
     const days = Array.from({ length: 8 }, (_, i) => {
-      const d = subDays(new Date(), 7 - i);
+      const d = subDays(new Date(), 5 - i);
       const key = format(d, "yyyy-MM-dd");
       const vol = history
         .filter((h) => format(h.endedAt, "yyyy-MM-dd") === key)
