@@ -314,7 +314,6 @@ export function SessionView() {
               className="min-w-0 flex-1 px-3"
               onClick={() => toggleSet(session.currentIndex, openSet.id)}
             >
-              <CheckCheck className="size-5 shrink-0" />
               <span className="truncate">
                 Serie {current.sets.indexOf(openSet) + 1} · {formatWeight(openSet.weightKg, unit)} ×{" "}
                 {openSet.reps}
