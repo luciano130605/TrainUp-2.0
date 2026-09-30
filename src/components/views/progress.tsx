@@ -1,73 +1,113 @@
 import { useMemo, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { format, subDays } from "date-fns";
+import { addMonths, format, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { getExercise } from "@/lib/exercises";
-import { formatVolume, formatWeight, formatDuration, fromDisplayWeight, toDisplayWeight } from "@/lib/format";
+import { formatVolume, formatWeight, formatDuration, toDisplayWeight } from "@/lib/format";
 import { useTrain } from "@/lib/store";
-import { Button } from "../ui/button";
 
-const WEEK_LABELS = ["Sem 1", "Sem 2", "Sem 3", "Sem 4"];
-const DAY_LABELS = ["L", "M", "X", "J", "V"];
+const DAY_LABELS = ["LU", "MA", "MI", "JU", "VI"];
+
+function monthKey(d: Date) {
+  return format(d, "yyyy-MM");
+}
+
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 export function ProgressView() {
   const history = useTrain((s) => s.history);
   const records = useTrain((s) => s.records);
   const unit = useTrain((s) => s.profile.unit);
   const bodyLogs = useTrain((s) => s.bodyLogs);
-  const addBodyLog = useTrain((s) => s.addBodyLog);
-  const [draftWeight, setDraftWeight] = useState("");
+  const [offset, setOffset] = useState(0);
 
-  const monthData = useMemo(() => {
-    const today = new Date();
-    // Month view: 4 weeks × 5 days (Mon–Fri), the last 20 weekdays ending today.
-    return Array.from({ length: 20 }, (_, i) => {
-      const d = subDays(today, 19 - i);
+  const today = useMemo(() => new Date(), []);
+  const anchor = useMemo(() => addMonths(startOfMonth(today), offset), [today, offset]);
+  const monthLabel = useMemo(() => capitalize(format(anchor, "LLLL yyyy", { locale: es })), [anchor]);
+  const canGoNext = offset < 0;
+
+  // ── Volumen · última semana (lunes a viernes) ────────────────────────────────
+  const weekData = useMemo(() => {
+    // Lunes de la semana en curso.
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (Number(format(today, "i")) - 1));
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
       const key = format(d, "yyyy-MM-dd");
       const vol = history
         .filter((h) => format(h.endedAt, "yyyy-MM-dd") === key)
         .reduce((s, h) => s + h.volumeKg, 0);
       return {
-        day: format(d, "d", { locale: es }),
+        day: format(d, "EEEEEE", { locale: es }).toUpperCase(),
         vol: unit === "kg" ? Math.round(vol) : Math.round(vol * 2.2),
+        date: key,
       };
     });
-  }, [history, unit]);
+  }, [history, unit, today]);
 
-  const heat = useMemo(() => {
-    const today = new Date();
-    // 5 training days × 4 weeks for the current month.
-    const set = new Set(history.map((h) => format(h.endedAt, "yyyy-MM-dd")));
-    return Array.from({ length: 20 }, (_, i) => {
-      const d = subDays(today, 19 - i);
+  const weekTotal = history
+    .filter((h) => weekData.some((d) => d.date === format(h.endedAt, "yyyy-MM-dd")))
+    .reduce((s, h) => s + h.volumeKg, 0);
+
+  // ── Calendario del mes: 5 columnas (Lun–Vie) alineadas al mes real ───────────
+  const calendar = useMemo(() => {
+    const first = startOfMonth(anchor);
+    const startIso = Number(format(first, "i")) - 1; // 0 = lunes … 4 = viernes
+
+    const trainedDates = new Set<string>();
+    for (const h of history) {
+      const d = new Date(h.endedAt);
+      if (monthKey(d) === monthKey(anchor)) trainedDates.add(format(d, "yyyy-MM-dd"));
+    }
+
+    const cells: Array<{ key: string; label: string; trained: boolean; future: boolean; isToday: boolean }> = [];
+    for (let i = 0; i < startIso; i++) {
+      cells.push({ key: `pad-${i}`, label: "", trained: false, future: false, isToday: false });
+    }
+    const lastDay = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+    for (let day = 1; day <= lastDay; day++) {
+      const d = new Date(anchor.getFullYear(), anchor.getMonth(), day);
+      const wd = d.getDay();
+      if (wd === 0 || wd === 6) continue; // solo Lunes a Viernes
       const key = format(d, "yyyy-MM-dd");
-      return { key, day: format(d, "d", { locale: es }), on: set.has(key) };
-    });
-  }, [history]);
+      cells.push({
+        key,
+        label: String(day),
+        trained: trainedDates.has(key),
+        future: d.getTime() > today.getTime(),
+        isToday: key === format(today, "yyyy-MM-dd"),
+      });
+    }
+    return cells;
+  }, [anchor, history, today]);
 
+  const trainedCount = calendar.filter((c) => c.trained).length;
+
+  // ── Peso corporal · mes seleccionado ────────────────────────────────────────
   const bodyData = useMemo(() => {
-    const today = new Date();
     const logMap = new Map(bodyLogs.map((l) => [l.date, l.weightKg]));
-    return Array.from({ length: 20 }, (_, i) => {
-      const d = subDays(today, 19 - i);
-      const key = format(d, "yyyy-MM-dd");
+    const sameMonth = monthKey(anchor) === monthKey(today);
+    const lastDay = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+    const days = sameMonth ? today.getDate() : lastDay;
+    return Array.from({ length: days }, (_, i) => {
+      const day = i + 1;
+      const key = `${monthKey(anchor)}-${String(day).padStart(2, "0")}`;
+      const entry: { day: string; peso?: number } = { day: String(day) };
       const kg = logMap.get(key);
-      const entry: { day: string; peso?: number } = { day: format(d, "d", { locale: es }) };
       if (kg != null) entry.peso = toDisplayWeight(kg, unit);
       return entry;
     });
-  }, [bodyLogs, unit]);
+  }, [bodyLogs, anchor, today, unit]);
 
-  function saveBodyWeight() {
-    const n = Number(draftWeight.replace(",", "."));
-    if (!Number.isFinite(n) || n <= 0) return;
-    addBodyLog(fromDisplayWeight(n, unit));
-    setDraftWeight("");
-  }
+  const monthLogs = bodyLogs.filter((l) => monthKey(new Date(`${l.date}T12:00:00`)) === monthKey(anchor));
+  const monthStartWeight = monthLogs[0];
+  const monthEndWeight = monthLogs.at(-1);
+  const monthWeight = monthEndWeight ?? bodyLogs.at(-1);
 
   const totalVol = history.reduce((s, h) => s + h.volumeKg, 0);
-  const lastWeight = bodyLogs.at(-1);
-  const profile = useTrain((s) => s.profile);
 
   return (
     <div className="space-y-7 pb-8 stagger-in">
@@ -79,10 +119,13 @@ export function ProgressView() {
       </header>
 
       <section className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-border)]">
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">Volumen · mes (20 días)</p>
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted">Volumen · esta semana</p>
+          <p className="text-sm font-medium tabular-nums text-muted">{formatVolume(weekTotal, unit)}</p>
+        </div>
         <div className="mt-3 h-40">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={monthData} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+            <AreaChart data={weekData} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
               <defs>
                 <linearGradient id="vol" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--tu-accent)" stopOpacity={0.45} />
@@ -107,37 +150,76 @@ export function ProgressView() {
       </section>
 
       <section>
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">Calendario · mes</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted">Calendario</p>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setOffset((o) => o - 1)}
+              aria-label="Mes anterior"
+              className="grid size-8 place-items-center rounded-lg bg-elevated text-muted shadow-[var(--shadow-border)] pressable"
+            >
+              ‹
+            </button>
+            <span className="min-w-34 text-center text-sm font-medium tabular-nums">{monthLabel}</span>
+            <button
+              type="button"
+              onClick={() => setOffset((o) => (o < 0 ? o + 1 : 0))}
+              disabled={!canGoNext}
+              aria-label="Mes siguiente"
+              className="grid size-8 place-items-center rounded-lg bg-elevated text-muted shadow-[var(--shadow-border)] pressable disabled:opacity-30"
+            >
+              ›
+            </button>
+          </div>
+        </div>
         <div className="mt-3 grid grid-cols-5 gap-2">
           {DAY_LABELS.map((label) => (
-            <span key={`h-${label}`} className="text-center text-[10px] font-medium text-muted">
+            <span key={`h-${label}`} className="text-center text-[11px] font-medium text-muted">
               {label}
             </span>
           ))}
-          {heat.map((d) => (
-            <span
-              key={d.key}
-              title={`${d.key}${d.on ? " · entrenado" : ""}`}
-              className={`flex h-9 items-center justify-center rounded-lg text-xs tabular-nums shadow-[var(--shadow-border)] ${
-                d.on ? "bg-accent text-accent-fg font-medium" : "bg-elevated text-subtle"
-              }`}
-            >
-              {d.day}
-            </span>
-          ))}
+          {calendar.map((c) =>
+            c.label === "" ? (
+              <span key={c.key} aria-hidden className="h-10 rounded-lg" />
+            ) : (
+              <span
+                key={c.key}
+                title={`${c.key}${c.trained ? " · entrenado" : ""}`}
+                className={`flex h-10 items-center justify-center rounded-lg text-sm tabular-nums ${
+                  c.trained
+                    ? "bg-accent font-semibold text-accent-fg"
+                    : c.isToday
+                      ? "text-fg shadow-[inset_0_0_0_1px_var(--tu-line-strong)]"
+                      : c.future
+                        ? "text-subtle"
+                        : "bg-elevated text-subtle shadow-[var(--shadow-border)]"
+                }`}
+              >
+                {c.label}
+              </span>
+            ),
+          )}
         </div>
-        <div className="mt-3 flex items-center justify-between text-[11px] text-muted">
-          {WEEK_LABELS.map((w) => (
-            <span key={w}>{w}</span>
-          ))}
-        </div>
+        <p className="mt-3 text-[11px] text-muted">
+          {trainedCount} {trainedCount === 1 ? "día entrenado" : "días entrenados"} · lunes a viernes
+        </p>
       </section>
 
       <section className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-border)]">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Peso corporal · mes</p>
-          <p className="text-sm font-medium tabular-nums">
-            {lastWeight ? formatWeight(lastWeight.weightKg, unit) : "—"}
+          <p className="text-xs uppercase tracking-[0.18em] text-muted">Peso corporal · {monthLabel}</p>
+          <p className="flex items-baseline gap-2 text-sm font-medium tabular-nums">
+            {monthWeight ? formatWeight(monthWeight.weightKg, unit) : "—"}
+            {monthStartWeight && monthEndWeight && monthStartWeight !== monthEndWeight ? (
+              <span className={monthEndWeight.weightKg <= monthStartWeight.weightKg ? "text-accent" : "text-warn"}>
+                {monthEndWeight.weightKg <= monthStartWeight.weightKg ? "▼" : "▲"}{" "}
+                {Math.abs(
+                  toDisplayWeight(monthEndWeight.weightKg, unit) -
+                    toDisplayWeight(monthStartWeight.weightKg, unit),
+                ).toFixed(1)}
+              </span>
+            ) : null}
           </p>
         </div>
         <div className="mt-3 h-40">
@@ -177,22 +259,7 @@ export function ProgressView() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-3 flex gap-2">
-          <input
-            type="number"
-            inputMode="decimal"
-            value={draftWeight}
-            onChange={(e) => setDraftWeight(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") saveBodyWeight();
-            }}
-            placeholder={`${toDisplayWeight(profile.bodyWeightKg, unit)}`}
-            className="min-w-0 flex-1 rounded-lg bg-elevated px-3 py-2 text-sm tabular-nums shadow-[var(--shadow-border)] outline-none focus:shadow-[var(--shadow-border-hover)]"
-          />
-          <Button type="button" variant="primary" onClick={saveBodyWeight} className="px-4">
-            Registrar
-          </Button>
-        </div>
+        <p className="mt-3 text-[11px] text-muted">Registrá tu peso desde el Perfil.</p>
       </section>
 
       <section>
