@@ -240,7 +240,6 @@ export function RoutineCard({
               onClick={onStart}
               className="flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-accent pressable"
             >
-              <Play className="size-4" />
               {startLabel}
             </button>
           ) : null}
