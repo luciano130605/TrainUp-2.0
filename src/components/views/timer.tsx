@@ -20,6 +20,8 @@ const MODES: { id: TimerMode; label: string }[] = [
 export function TimerView() {
   const mode = useTrain((s) => s.timerMode);
   const setMode = useTrain((s) => s.setTimerMode);
+  const countdownSound = useTrain((s) => s.settings.countdownSound);
+  const lastBeep = useRef(0);
   const [seconds, setSeconds] = useState(90);
   const [work, setWork] = useState(20);
   const [rest, setRest] = useState(10);
@@ -55,6 +57,14 @@ export function TimerView() {
     if (!running) return;
     if (mode === "cronometro") return;
     if (ended.current) return;
+    // 3-2-1 lead-in on the plain countdown modes, when the toggle is on.
+    if (countdownSound && mode !== "emom" && mode !== "tabata") {
+      const left = Math.ceil(target - elapsed);
+      if (left > 0 && left <= 3 && lastBeep.current !== left) {
+        lastBeep.current = left;
+        chime("countdown");
+      }
+    }
     if (mode === "descanso" || mode === "amrap") {
       if (elapsed >= target) finishBlock();
       return;
@@ -82,7 +92,7 @@ export function TimerView() {
       if (r !== round) setRound(r);
       if (elapsed >= target) finishBlock();
     }
-  }, [elapsed, running, mode, target, work, rest, rounds, phase, round]);
+  }, [elapsed, running, mode, target, work, rest, rounds, phase, round, countdownSound]);
 
   function finishBlock() {
     if (ended.current) return;
@@ -113,6 +123,7 @@ export function TimerView() {
     acc.current = 0;
     started.current = null;
     ended.current = false;
+    lastBeep.current = 0;
     setPhase("work");
     setRound(1);
   }

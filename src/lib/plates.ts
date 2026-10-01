@@ -23,7 +23,14 @@ function round3(n: number) {
   return Math.round(n * 1000) / 1000;
 }
 
-export function planPlates(targetKg: number, barKg: number): PlatePlan {
+/** The plates actually on the rack: drop anything smaller than the athlete's
+ *  smallest pair, so the plan never asks for a 0.5 kg sliver they don't own. */
+export function platesFor(minPlateKg: number) {
+  const floor = Number.isFinite(minPlateKg) && minPlateKg > 0 ? minPlateKg : 1.25;
+  return PLATE_KG.filter((p) => p >= floor - 1e-9);
+}
+
+export function planPlates(targetKg: number, barKg: number, minPlateKg = 1.25): PlatePlan {
   const loadKg = round3(targetKg - barKg);
   if (!Number.isFinite(targetKg) || !Number.isFinite(barKg) || targetKg <= 0) {
     return {
@@ -52,7 +59,7 @@ export function planPlates(targetKg: number, barKg: number): PlatePlan {
 
   let remaining = round3(loadKg / 2);
   const perSide: PlateStack[] = [];
-  for (const plate of PLATE_KG) {
+  for (const plate of platesFor(minPlateKg)) {
     const count = Math.floor((remaining + 1e-6) / plate);
     if (count > 0) {
       perSide.push({ weight: plate, count });

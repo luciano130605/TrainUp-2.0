@@ -16,8 +16,8 @@ import { getRoutine, planFor } from "./routines";
 import { e1rm, weekStart } from "./format";
 import { uid } from "./utils";
 import { isToday } from "date-fns";
-import { setVibrationEnabled } from "./audio";
-import { applyTheme } from "./theme";
+import { applyAudioSettings, unlockAudio } from "./audio";
+import { applyTheme, rememberAutoTheme } from "./theme";
 import { isoWeekday } from "./notify";
 
 type OnboardingInput = Pick<
@@ -76,7 +76,27 @@ export const defaultSettings: Settings = {
   notifyHour: "08:00",
   keepAwake: true,
   vibration: true,
+  sound: true,
+  volume: 70,
+  tone: "clasico",
+  countdownSound: true,
+  haptics: false,
+  autoTheme: false,
+  prefillLastWeight: true,
+  autoAdvance: true,
+  defaultRestSec: 90,
+  minPlateKg: 1.25,
+  weeklyGoal: 4,
 };
+
+/** Rest lengths offered in Ajustes, in seconds. */
+export const REST_PRESETS: Array<{ id: string; label: string; sec: number }> = [
+  { id: "30", label: "30s", sec: 30 },
+  { id: "60", label: "1 min", sec: 60 },
+  { id: "90", label: "1:30", sec: 90 },
+  { id: "120", label: "2 min", sec: 120 },
+  { id: "180", label: "3 min", sec: 180 },
+];
 
 const STORE_VERSION = 1;
 
@@ -89,7 +109,11 @@ function lastLoad(history: CompletedSession[], exerciseId: string): { weightKg: 
   return null;
 }
 
-function buildSession(routine: Routine, history: CompletedSession[]): ActiveSession {
+function buildSession(
+  routine: Routine,
+  history: CompletedSession[],
+  prefillLastWeight: boolean,
+): ActiveSession {
   return {
     routineId: routine.id,
     routineName: routine.name,
@@ -99,9 +123,10 @@ function buildSession(routine: Routine, history: CompletedSession[]): ActiveSess
     restTotalSec: 0,
     exercises: routine.exercises.map((slot) => {
       const ex = getExercise(slot.exerciseId);
-      const prev = lastLoad(history, slot.exerciseId);
+      const prev = prefillLastWeight ? lastLoad(history, slot.exerciseId) : null;
       // Precedence: what the athlete dialled into the routine, then what they
-      // last lifted for this movement, then an empty bar.
+      // last lifted for this movement (unless they turned that off), then an
+      // empty bar.
       const weightKg = slot.weightKg ?? prev?.weightKg ?? 0;
       const reps = slot.reps || ex.defaultReps;
       const sets: WorkoutSet[] = Array.from({ length: slot.sets }, () => ({
@@ -218,16 +243,21 @@ export const useTrain = create<Store>()(
       timerMode: "descanso",
       markHydrated: () => set({ hydrated: true }),
       hydrateRemote: (snap) => {
-        applyTheme(snap.settings.theme);
-        setVibrationEnabled(snap.settings.vibration);
+        // Merge over the defaults: a snapshot saved before a setting existed
+        // (or restored from the database) must never leave a key undefined.
+        const settings = { ...defaultSettings, ...snap.settings };
+        rememberAutoTheme(settings.autoTheme);
+        applyTheme(settings.theme);
+        applyAudioSettings(settings);
         set({
           ...snap,
+          settings,
           hydrated: true,
         });
       },
       beginFreshAccount: () => {
         applyTheme(defaultSettings.theme);
-        setVibrationEnabled(defaultSettings.vibration);
+        applyAudioSettings(defaultSettings);
         set({
           profile: defaultProfile,
           settings: defaultSettings,
@@ -255,7 +285,7 @@ export const useTrain = create<Store>()(
         });
         const s = get();
         applyTheme(s.settings.theme);
-        setVibrationEnabled(s.settings.vibration);
+        applyAudioSettings(s.settings);
         if (persistFn) void persistFn(snapshot(s)).catch(() => {});
       },
       updateProfile: (patch) => {
@@ -263,17 +293,21 @@ export const useTrain = create<Store>()(
         queueSave(get);
       },
       updateSettings: (patch) => {
+        // Any settings change is a user gesture, so it is also the safest moment
+        // to make sure iOS has woken the audio context up.
+        unlockAudio();
         set((s) => {
           const settings = { ...s.settings, ...patch };
           if (patch.theme) applyTheme(patch.theme);
-          if (patch.vibration != null) setVibrationEnabled(patch.vibration);
+          if (patch.autoTheme != null) rememberAutoTheme(patch.autoTheme);
+          applyAudioSettings(settings);
           return { settings };
         });
         queueSave(get);
       },
       startRoutine: (routine) =>
         set((s) => ({
-          session: buildSession(routine, s.history),
+          session: buildSession(routine, s.history, s.settings.prefillLastWeight),
           lastSummary: null,
         })),
       discardSession: () => set({ session: null }),
@@ -315,7 +349,11 @@ export const useTrain = create<Store>()(
             restUntil = Date.now() + target.restSec * 1000;
             restTotalSec = target.restSec;
             const updated = exercises[exerciseIndex]!;
-            if (updated.sets.every((st) => st.completed) && exerciseIndex < exercises.length - 1) {
+            if (
+              s.settings.autoAdvance &&
+              updated.sets.every((st) => st.completed) &&
+              exerciseIndex < exercises.length - 1
+            ) {
               currentIndex = exerciseIndex + 1;
             }
           } else {
@@ -370,7 +408,7 @@ export const useTrain = create<Store>()(
               sets: Array.from({ length: Math.max(item.sets.length, ex.defaultSets) }, () => ({
                 id: uid("set"),
                 reps: ex.defaultReps,
-                weightKg: prev?.weightKg ?? 0,
+                weightKg: s.settings.prefillLastWeight ? (prev?.weightKg ?? 0) : 0,
                 completed: false,
               })),
             };
@@ -507,6 +545,17 @@ export const useTrain = create<Store>()(
       name: "trainup-v2",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
+      // Snapshots written before the Ajustes screen grew its extra switches are
+      // missing keys, so always top them up from the defaults.
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<Store>;
+        return {
+          ...current,
+          ...saved,
+          profile: { ...defaultProfile, ...(saved.profile ?? {}) },
+          settings: { ...defaultSettings, ...(saved.settings ?? {}) },
+        };
+      },
       // zustand DROPS persisted state whose stored `version` does not match the
       // configured one (and logs "couldn't be migrated"), which silently wipes a
       // returning athlete's history and throws them back into onboarding. Pin the

@@ -47,7 +47,24 @@ type ProfileRow = {
   notify_hour: string;
   keep_awake: boolean;
   vibration: boolean;
+  sound: boolean;
+  volume: number;
+  tone: Settings["tone"];
+  countdown_sound: boolean;
+  haptics: boolean;
+  auto_theme: boolean;
+  prefill_last_weight: boolean;
+  auto_advance: boolean;
+  default_rest_sec: number;
+  min_plate_kg: number;
+  weekly_goal: number;
 };
+
+const TONES: Settings["tone"][] = ["clasico", "campana", "suave", "digital"];
+
+function asTone(value: unknown, fallback: Settings["tone"]): Settings["tone"] {
+  return TONES.includes(value as Settings["tone"]) ? (value as Settings["tone"]) : fallback;
+}
 
 function rowToState(row: ProfileRow): { profile: Profile; settings: Settings } {
   const days = asNum(row.days_per_week, 4);
@@ -71,6 +88,17 @@ function rowToState(row: ProfileRow): { profile: Profile; settings: Settings } {
       notifyHour: row.notify_hour || "08:00",
       keepAwake: asBool(row.keep_awake, true),
       vibration: asBool(row.vibration, true),
+      sound: asBool(row.sound, true),
+      volume: Math.min(100, Math.max(0, asNum(row.volume, 70))),
+      tone: asTone(row.tone, "clasico"),
+      countdownSound: asBool(row.countdown_sound, true),
+      haptics: asBool(row.haptics, false),
+      autoTheme: asBool(row.auto_theme, false),
+      prefillLastWeight: asBool(row.prefill_last_weight, true),
+      autoAdvance: asBool(row.auto_advance, true),
+      defaultRestSec: asNum(row.default_rest_sec, 90),
+      minPlateKg: asNum(row.min_plate_kg, 1.25),
+      weeklyGoal: asNum(row.weekly_goal, 4),
     },
   };
 }
@@ -83,7 +111,9 @@ export const loadGymState = createServerFn()
     const uid = context.userId;
     const profiles = await sql<ProfileRow>`
       select name, goal, level, days_per_week, unit, body_weight_kg, height_cm, gender, birth_date,
-             onboarded, theme, notifications, notify_hour, keep_awake, vibration
+             onboarded, theme, notifications, notify_hour, keep_awake, vibration,
+             sound, volume, tone, countdown_sound, haptics, auto_theme, prefill_last_weight,
+             auto_advance, default_rest_sec, min_plate_kg, weekly_goal
       from profiles where user_id = ${uid}
     `;
     const row = profiles[0];
@@ -183,11 +213,16 @@ export const saveGymState = createServerFn({ method: "POST" })
     await sql`
       insert into profiles (
         user_id, name, goal, level, days_per_week, unit, body_weight_kg, height_cm, gender, birth_date,
-        onboarded, theme, notifications, notify_hour, keep_awake, vibration, updated_at
+        onboarded, theme, notifications, notify_hour, keep_awake, vibration,
+        sound, volume, tone, countdown_sound, haptics, auto_theme, prefill_last_weight,
+        auto_advance, default_rest_sec, min_plate_kg, weekly_goal, updated_at
       ) values (
         ${uid}, ${p.name}, ${p.goal}, ${p.level}, ${p.daysPerWeek}, ${p.unit}, ${p.bodyWeightKg},
         ${p.heightCm}, ${p.gender}, ${p.birthDate}, ${p.onboarded}, ${s.theme}, ${s.notifications},
-        ${s.notifyHour}, ${s.keepAwake}, ${s.vibration}, now()
+        ${s.notifyHour}, ${s.keepAwake}, ${s.vibration},
+        ${s.sound}, ${s.volume}, ${s.tone}, ${s.countdownSound}, ${s.haptics}, ${s.autoTheme},
+        ${s.prefillLastWeight}, ${s.autoAdvance}, ${s.defaultRestSec}, ${s.minPlateKg},
+        ${s.weeklyGoal}, now()
       )
       on conflict (user_id) do update set
         name = excluded.name,
@@ -205,6 +240,17 @@ export const saveGymState = createServerFn({ method: "POST" })
         notify_hour = excluded.notify_hour,
         keep_awake = excluded.keep_awake,
         vibration = excluded.vibration,
+        sound = excluded.sound,
+        volume = excluded.volume,
+        tone = excluded.tone,
+        countdown_sound = excluded.countdown_sound,
+        haptics = excluded.haptics,
+        auto_theme = excluded.auto_theme,
+        prefill_last_weight = excluded.prefill_last_weight,
+        auto_advance = excluded.auto_advance,
+        default_rest_sec = excluded.default_rest_sec,
+        min_plate_kg = excluded.min_plate_kg,
+        weekly_goal = excluded.weekly_goal,
         updated_at = now()
     `;
 

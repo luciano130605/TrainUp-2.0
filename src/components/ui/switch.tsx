@@ -15,12 +15,13 @@ export function Switch({
       checked={checked}
       onCheckedChange={onCheckedChange}
       className={cn(
-        "relative h-7 w-12 shrink-0 rounded-full bg-elevated shadow-[var(--shadow-border)]",
+        "relative h-8 w-[3.75rem] shrink-0 rounded-full bg-elevated shadow-[var(--shadow-border)]",
+        "transition-colors duration-200",
         "data-[state=checked]:bg-accent",
         className,
       )}
     >
-      <SwitchPrimitive.Thumb className="block size-6 translate-x-0.5 rounded-full bg-fg transition-transform duration-150 data-[state=checked]:translate-x-5 data-[state=checked]:bg-accent-fg" />
+      <SwitchPrimitive.Thumb className="block size-6 translate-x-1 rounded-full bg-fg shadow-[0_1px_2px_rgb(0_0_0_/_0.35)] transition-transform duration-200 ease-[var(--ease-out-smooth)] data-[state=checked]:translate-x-[2.1rem] data-[state=checked]:bg-accent-fg" />
     </SwitchPrimitive.Root>
   );
 }

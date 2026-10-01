@@ -21,10 +21,10 @@ import {
   fromDisplayWeight,
   weightStep,
 } from "@/lib/format";
-import { useTrain } from "@/lib/store";
+import { REST_PRESETS, useTrain } from "@/lib/store";
 import type { WorkoutSet } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { chime, pulse } from "@/lib/audio";
+import { chime, hapticsEnabled, pulse, tapFeedback } from "@/lib/audio";
 import { isLowPowerDevice } from "@/lib/low-power";
 import { releaseWakeLock, requestWakeLock } from "@/lib/wake-lock";
 import { Button } from "../ui/button";
@@ -46,9 +46,13 @@ export function SessionView() {
   const finish = useTrain((s) => s.finishSession);
   const discard = useTrain((s) => s.discardSession);
   const keepAwake = useTrain((s) => s.settings.keepAwake);
+  const countdownSound = useTrain((s) => s.settings.countdownSound);
+  const defaultRestSec = useTrain((s) => s.settings.defaultRestSec);
   const [now, setNow] = useState(Date.now());
   /** Seconds left on the rest timer when it was paused by hand, else null. */
   const [pausedRest, setPausedRest] = useState<number | null>(null);
+  /** Last whole second already announced by the 3-2-1 countdown. */
+  const [beeped, setBeeped] = useState<number | null>(null);
   const [picker, setPicker] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -83,21 +87,40 @@ export function SessionView() {
 
   // A rest period that starts or ends on its own clears any manual pause.
   useEffect(() => {
-    if (!session?.restUntil) setPausedRest(null);
+    if (!session?.restUntil) {
+      setPausedRest(null);
+      setBeeped(null);
+    }
   }, [session?.restUntil]);
 
   useEffect(() => {
-    if (!session?.restUntil) {
-      setRang(false);
+    if (!session?.restUntil || pausedRest != null) return;
+    const left = Math.ceil((session.restUntil - now) / 1000);
+    if (left > 0) {
+      if (countdownSound && left <= 3 && beeped !== left) {
+        setBeeped(left);
+        chime("countdown");
+      }
       return;
     }
-    if (session.restUntil <= Date.now() && !rang) {
-      setRang(true);
-      chime("done");
-      pulse();
-      skipRest();
-    }
-  }, [now, session?.restUntil, rang, skipRest]);
+    if (rang) return;
+    setRang(true);
+    chime("done");
+    pulse();
+    skipRest();
+  }, [now, session?.restUntil, rang, skipRest, countdownSound, beeped, pausedRest]);
+
+  // "Vibración al tocar" when it is on; when it is off the buttons at least get a
+  // clear press state, so the taps never feel dead.
+  useEffect(() => {
+    if (!hapticsEnabled()) return;
+    const onDown = (e: PointerEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest("button, [role='button'], input[type='range']")) tapFeedback();
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, []);
 
   if (!session) return null;
 
@@ -119,6 +142,17 @@ export function SessionView() {
 
   function pauseRest() {
     setPausedRest(countdown);
+  }
+
+  function tap() {
+    tapFeedback();
+  }
+
+  /** One tap sets the rest to the athlete's own preferred length. */
+  function setRestTo(sec: number) {
+    tap();
+    setPausedRest(null);
+    addRest(sec - Math.round(countdown));
   }
 
   function resumeRest() {
@@ -249,7 +283,10 @@ export function SessionView() {
                 suffix={exercise.esTiempo ? "seg" : "reps"}
                 active={openSet?.id === st.id}
                 onChange={(patch) => updateSet(session.currentIndex, st.id, patch)}
-                onToggle={() => toggleSet(session.currentIndex, st.id)}
+                onToggle={() => {
+                  tap();
+                  toggleSet(session.currentIndex, st.id);
+                }}
               />
             ))}
           </ul>
@@ -312,7 +349,10 @@ export function SessionView() {
             <Button
               size="lg"
               className="min-w-0 flex-1 px-3"
-              onClick={() => toggleSet(session.currentIndex, openSet.id)}
+              onClick={() => {
+                tap();
+                toggleSet(session.currentIndex, openSet.id);
+              }}
             >
               <span className="truncate">
                 Serie {current.sets.indexOf(openSet) + 1} · {formatWeight(openSet.weightKg, unit)} ×{" "}
@@ -382,7 +422,22 @@ export function SessionView() {
             <p className="mt-3 truncate text-center text-sm text-muted">
               Sigue: <span className="text-fg">{nextUp ?? "cierre de sesión"}</span>
             </p>
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-3 flex gap-1.5">
+              {REST_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setRestTo(p.sec)}
+                  className={cn(
+                    "h-10 flex-1 rounded-lg text-xs font-medium pressable",
+                    defaultRestSec === p.sec ? "bg-accent/15 text-accent" : "bg-elevated text-muted",
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
               <Button variant="secondary" onClick={() => addRest(-15)}>
                 −15s
               </Button>

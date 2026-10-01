@@ -15,6 +15,7 @@ export function HomeView() {
   const history = useTrain((s) => s.history);
   const extras = useTrain((s) => s.customRoutines);
   const records = useTrain((s) => s.records);
+  const weeklyGoal = useTrain((s) => s.settings.weeklyGoal);
   const startRoutine = useTrain((s) => s.startRoutine);
   const setTab = useTrain((s) => s.setTab);
   const lastSummary = useTrain((s) => s.lastSummary);
@@ -44,8 +45,8 @@ export function HomeView() {
           <p className="mt-1 truncate text-xs text-muted">{longDate()}</p>
         </div>
         <Ring
-          value={weekSessions.length / profile.daysPerWeek}
-          label={`${weekSessions.length}/${profile.daysPerWeek}`}
+          value={weekSessions.length / Math.max(1, weeklyGoal)}
+          label={`${weekSessions.length}/${weeklyGoal}`}
           sub="semana"
         />
       </header>

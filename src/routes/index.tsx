@@ -16,8 +16,8 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { isTestMode } from "@/lib/auth/test-user";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { loadGymState, saveGymState } from "@/lib/data";
-import { applyTheme } from "@/lib/theme";
-import { setVibrationEnabled } from "@/lib/audio";
+import { applyTheme, matchSystemTheme } from "@/lib/theme";
+import { applyAudioSettings, unlockAudio } from "@/lib/audio";
 import { applyLowPowerClass } from "@/lib/low-power";
 import { fireWorkoutNotice, msUntilHour, routinesForToday } from "@/lib/notify";
 
@@ -76,11 +76,29 @@ function Home() {
 
   useEffect(() => {
     applyLowPowerClass();
+    // Unlock the clicker on the very first gesture: iOS keeps audio muted until
+    // a real user interaction resumes the context, and a rest chime can land
+    // long before the athlete touches anything noisy.
+    unlockAudio();
     // Test mode is local-only: never wire the persist bridge, so no snapshot can
     // reach the database while it is on.
     if (isTestMode()) return;
     bindGymPersist((snap) => saveGymState({ data: snap }));
   }, []);
+
+  // "Tema automático": follow the phone's light/dark setting and keep following
+  // it while the app is open.
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => {
+      const s = useTrain.getState().settings;
+      if (s.autoTheme) applyTheme(matchSystemTheme());
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [rehydrated, onboarded]);
 
   useEffect(() => {
     let alive = true;
@@ -102,8 +120,9 @@ function Home() {
       if (!alive) return;
       setRehydrated(true);
       const local = useTrain.getState();
-      applyTheme(local.settings.theme);
-      setVibrationEnabled(local.settings.vibration);
+      applyTheme(local.settings.autoTheme ? matchSystemTheme() : local.settings.theme);
+      applyAudioSettings(local.settings);
+      unlockAudio();
       const rest = local.session?.restUntil;
       if (rest && rest < Date.now()) skipRest();
       if (!userId || loadedFor.current !== null) {

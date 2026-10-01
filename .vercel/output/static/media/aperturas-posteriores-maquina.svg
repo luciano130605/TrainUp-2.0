@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img">
+  <rect width="640" height="360" fill="#131513"/>
+  <g stroke="#3a403a" stroke-width="2" fill="none">
+    <path d="M24 24h592v312H24z"/>
+  </g>
+
+  
+  <g stroke="#2a2e2a" stroke-width="10" stroke-linecap="round" fill="none">
+    <path d="M96 300h448"/>
+  </g>
+  <g fill="#2a2e2a">
+    <rect x="252" y="108" width="136" height="180" rx="14"/>
+    <rect x="238" y="92" width="164" height="32" rx="12"/>
+    <rect x="300" y="272" width="40" height="34" rx="8"/>
+  </g>
+  <g stroke="#6b736a" stroke-width="16" stroke-linecap="round" fill="none">
+    <path d="M320 268V200"/>
+    <path d="M320 210l-58 22"/>
+    <path d="M320 210l58 22"/>
+  </g>
+  <g stroke="#a7b0a4" stroke-width="12" stroke-linecap="round" fill="none">
+    <path d="M262 232l-46 20"/>
+    <path d="M378 232l46 20"/>
+  </g>
+  <circle cx="320" cy="118" r="26" fill="#6b736a"/>
+  <g stroke="#6ee7b7" stroke-width="5" stroke-linecap="round" fill="none">
+    <path d="M212 258c-14-26-10-56 6-74"/>
+    <path d="M428 258c14-26 10-56-6-74"/>
+  </g>
+  <g stroke="#6ee7b7" stroke-width="4" fill="none">
+    <path d="M198 202l8-18 16 12"/>
+    <path d="M442 202l-8-18-16 12"/>
+  </g>
+
+</svg>

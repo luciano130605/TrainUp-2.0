@@ -1,7 +1,20 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  Bell,
+  History,
+  Moon,
+  Repeat,
+  Smartphone,
+  Timer,
+  Vibrate,
+  Volume2,
+  Zap,
+} from "lucide-react";
 import { GENDER_LABEL, GOAL_LABEL, LEVEL_LABEL, formatWeight, fromDisplayWeight, toDisplayWeight } from "@/lib/format";
-import type { Gender, Goal, Level, Theme, Unit } from "@/lib/types";
-import { useTrain } from "@/lib/store";
+import type { Gender, Goal, Level, SoundTone, Theme, Unit } from "@/lib/types";
+import { REST_PRESETS, useTrain } from "@/lib/store";
+import { hasRealVibration, previewSound, pulse } from "@/lib/audio";
+import { releaseWakeLock, requestWakeLock } from "@/lib/wake-lock";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Mark } from "../mark";
@@ -12,6 +25,13 @@ import { authEnabled, signOut } from "@/lib/auth/client";
 import { hasGateSessionMarker } from "@/lib/auth/gate-session-marker";
 import { deleteAccountData } from "@/lib/data";
 import { ensureNotifyPermission } from "@/lib/notify";
+
+const TONES: Array<{ id: SoundTone; label: string }> = [
+  { id: "clasico", label: "Clásico" },
+  { id: "campana", label: "Campana" },
+  { id: "suave", label: "Suave" },
+  { id: "digital", label: "Digital" },
+];
 
 const GOALS: Goal[] = ["fuerza", "hipertrofia", "definicion", "resistencia"];
 const LEVELS: Level[] = ["principiante", "intermedio", "avanzado"];
@@ -25,12 +45,10 @@ export function ProfileView() {
   const update = useTrain((s) => s.updateProfile);
   const updateSettings = useTrain((s) => s.updateSettings);
   const addBodyLog = useTrain((s) => s.addBodyLog);
-  const resetAll = useTrain((s) => s.resetAll);
   const user = useCurrentUser();
   const { isPending, testMode } = useCurrentUserState();
   const [weight, setWeight] = useState(String(toDisplayWeight(profile.bodyWeightKg, profile.unit)));
   const [height, setHeight] = useState(String(profile.heightCm));
-  const [confirmWipe, setConfirmWipe] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -47,6 +65,15 @@ export function ProfileView() {
     setWeight(String(toDisplayWeight(profile.bodyWeightKg, unit)));
   }
 
+  const [vibrationSupported, setVibrationSupported] = useState(true);
+  const [wakeLockSupported, setWakeLockSupported] = useState(true);
+
+  // Capability probes for the honest hints under the phone-dependent toggles.
+  useEffect(() => {
+    setVibrationSupported(hasRealVibration());
+    setWakeLockSupported(typeof navigator !== "undefined" && "wakeLock" in navigator);
+  }, []);
+
   async function toggleNotifications(on: boolean) {
     if (on) {
       const ok = await ensureNotifyPermission();
@@ -54,6 +81,16 @@ export function ProfileView() {
       return;
     }
     updateSettings({ notifications: false });
+  }
+
+  /** "Pantalla encendida": show it working right now, not just store the flag. */
+  async function toggleKeepAwake(on: boolean) {
+    updateSettings({ keepAwake: on });
+    if (!on) {
+      await releaseWakeLock();
+      return;
+    }
+    await requestWakeLock();
   }
 
   async function onSignOut() {
@@ -214,15 +251,54 @@ export function ProfileView() {
       <Field label="Apariencia">
         <div className="grid grid-cols-2 gap-2">
           {(["dark", "light"] as Theme[]).map((t) => (
-            <Chip key={t} active={settings.theme === t} onClick={() => updateSettings({ theme: t })}>
+            <Chip
+              key={t}
+              active={!settings.autoTheme && settings.theme === t}
+              onClick={() => updateSettings({ theme: t, autoTheme: false })}
+            >
               {t === "dark" ? "Oscuro" : "Claro"}
             </Chip>
           ))}
         </div>
+        <div className="mt-1.5 rounded-2xl bg-surface p-1 shadow-[var(--shadow-border)]">
+          <ToggleRow
+            icon={<Moon className="size-4" />}
+            label="Tema automático"
+            hint="Sigue el ajuste claro/oscuro del teléfono"
+            checked={settings.autoTheme}
+            onChange={(v) => updateSettings({ autoTheme: v })}
+          />
+        </div>
       </Field>
 
-      <section className="space-y-1 rounded-2xl bg-surface p-1 shadow-[var(--shadow-border)]">
+      <SettingsGroup title="Entrenamiento">
         <ToggleRow
+          icon={<Smartphone className="size-4" />}
+          label="Pantalla encendida"
+          hint="Evita que se apague mientras entrenás"
+          checked={settings.keepAwake}
+          onChange={(v) => void toggleKeepAwake(v)}
+          badge={!wakeLockSupported ? "Este navegador no lo permite" : undefined}
+        />
+        <ToggleRow
+          icon={<Repeat className="size-4" />}
+          label="Avance automático"
+          hint="Pasa solo al siguiente ejercicio al cerrar el último set"
+          checked={settings.autoAdvance}
+          onChange={(v) => updateSettings({ autoAdvance: v })}
+        />
+        <ToggleRow
+          icon={<History className="size-4" />}
+          label="Cargar último peso"
+          hint="Prellena cada serie con lo que levantaste la última vez"
+          checked={settings.prefillLastWeight}
+          onChange={(v) => updateSettings({ prefillLastWeight: v })}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title="Avisos y descanso">
+        <ToggleRow
+          icon={<Bell className="size-4" />}
           label="Notificaciones"
           hint="Aviso del entrenamiento del día"
           checked={settings.notifications}
@@ -240,18 +316,131 @@ export function ProfileView() {
           </div>
         ) : null}
         <ToggleRow
-          label="Pantalla encendida"
-          hint="Mantenerla activa durante la rutina"
-          checked={settings.keepAwake}
-          onChange={(v) => updateSettings({ keepAwake: v })}
+          icon={<Timer className="size-4" />}
+          label="Sonido"
+          hint="Tono cuando termina el descanso o el timer"
+          checked={settings.sound}
+          onChange={(v) => {
+            updateSettings({ sound: v });
+            if (v) previewSound(settings.tone);
+          }}
+        />
+        {settings.sound ? (
+          <div className="space-y-3 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted">Volumen</span>
+              <input
+                type="range"
+                min={10}
+                max={100}
+                step={10}
+                value={settings.volume}
+                aria-label="Volumen"
+                onChange={(e) => updateSettings({ volume: Number(e.target.value) })}
+                className="h-9 min-w-0 flex-1 accent-[var(--tu-accent)]"
+              />
+              <span className="w-9 text-right text-xs tabular-nums text-muted">{settings.volume}%</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {TONES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    updateSettings({ tone: t.id });
+                    previewSound(t.id);
+                  }}
+                  className={cn(
+                    "h-11 rounded-full px-3 text-xs font-medium pressable",
+                    settings.tone === t.id ? "bg-accent text-accent-fg" : "bg-elevated text-muted",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        <ToggleRow
+          icon={<Vibrate className="size-4" />}
+          label="Vibración"
+          hint={
+            vibrationSupported
+              ? "Pulso al terminar el descanso"
+              : "En iPhone suena como un golpe grave del parlante"
+          }
+          checked={settings.vibration}
+          onChange={(v) => {
+            updateSettings({ vibration: v });
+            if (v) pulse();
+          }}
         />
         <ToggleRow
-          label="Vibración"
-          hint="Pulso al terminar el descanso"
-          checked={settings.vibration}
-          onChange={(v) => updateSettings({ vibration: v })}
+          icon={<Zap className="size-4" />}
+          label="Vibración al tocar"
+          hint="Respuesta corta en cada serie o botón"
+          checked={settings.haptics}
+          onChange={(v) => updateSettings({ haptics: v })}
+          badge={!vibrationSupported ? "Solo Android" : undefined}
         />
-      </section>
+        <ToggleRow
+          icon={<Volume2 className="size-4" />}
+          label="Cuenta regresiva 3-2-1"
+          hint="Aviso en los últimos 3 segundos del descanso"
+          checked={settings.countdownSound}
+          onChange={(v) => updateSettings({ countdownSound: v })}
+        />
+        <ChoiceRow label="Descanso por defecto">
+          {REST_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => updateSettings({ defaultRestSec: p.sec })}
+              className={cn(
+                "h-11 flex-1 rounded-lg text-xs font-medium pressable shadow-[var(--shadow-border)]",
+                settings.defaultRestSec === p.sec
+                  ? "bg-accent text-accent-fg"
+                  : "bg-elevated text-fg",
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </ChoiceRow>
+      </SettingsGroup>
+
+      <SettingsGroup title="Gimnasio">
+        <ChoiceRow label={`Objetivo semanal (${settings.weeklyGoal} por semana)`}>
+          {[3, 4, 5, 6].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => updateSettings({ weeklyGoal: n })}
+              className={cn(
+                "h-11 flex-1 rounded-lg text-sm font-medium pressable shadow-[var(--shadow-border)]",
+                settings.weeklyGoal === n ? "bg-accent text-accent-fg" : "bg-elevated text-fg",
+              )}
+            >
+              {n}
+            </button>
+          ))}
+        </ChoiceRow>
+        <ChoiceRow label="Discos más chicos" hint="Para el cálculo de discos por lado">
+          {[0.5, 1, 1.25, 2.5].map((kg) => (
+            <button
+              key={kg}
+              type="button"
+              onClick={() => updateSettings({ minPlateKg: kg })}
+              className={cn(
+                "h-11 flex-1 rounded-lg text-xs font-medium pressable shadow-[var(--shadow-border)]",
+                settings.minPlateKg === kg ? "bg-accent text-accent-fg" : "bg-elevated text-fg",
+              )}
+            >
+              {kg} kg
+            </button>
+          ))}
+        </ChoiceRow>
+      </SettingsGroup>
 
       {authEnabled && !isPending && user && !user.isDevFallback && !gateSession ? (
         <div className="space-y-2">
@@ -287,19 +476,67 @@ function ToggleRow({
   hint,
   checked,
   onChange,
+  icon,
+  badge,
 }: {
   label: string;
   hint: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  icon?: ReactNode;
+  badge?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3">
-      <div>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted">{hint}</p>
+      <div className="flex min-w-0 items-center gap-3">
+        {icon ? (
+          <span
+            className={cn(
+              "grid size-9 shrink-0 place-items-center rounded-lg",
+              checked ? "bg-accent/15 text-accent" : "bg-elevated text-muted",
+            )}
+          >
+            {icon}
+          </span>
+        ) : null}
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{label}</p>
+          <p className="text-xs text-muted">{hint}</p>
+          {badge ? (
+            <p className="mt-0.5 text-[11px] text-subtle">{badge}</p>
+          ) : null}
+        </div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function SettingsGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section>
+      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted">{title}</p>
+      <div className="space-y-1 rounded-2xl bg-surface p-1 shadow-[var(--shadow-border)]">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function ChoiceRow({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="px-4 py-3">
+      <p className="text-sm font-medium">{label}</p>
+      {hint ? <p className="text-xs text-muted">{hint}</p> : null}
+      <div className="mt-2 flex gap-1.5">{children}</div>
     </div>
   );
 }

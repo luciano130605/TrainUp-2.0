@@ -81,12 +81,35 @@ export type Profile = {
   onboarded: boolean;
 };
 
+export type SoundTone = "clasico" | "campana" | "suave" | "digital";
+
 export type Settings = {
   theme: Theme;
   notifications: boolean;
   notifyHour: string;
   keepAwake: boolean;
   vibration: boolean;
+  /** Chime at the end of every rest / timer block. */
+  sound: boolean;
+  /** Silent 0–100 scale applied on top of the tone. */
+  volume: number;
+  tone: SoundTone;
+  /** Tone before the last 3 seconds of a rest, counted down. */
+  countdownSound: boolean;
+  /** Short buzz on every tap on a set / control. */
+  haptics: boolean;
+  /** Follow the phone's light/dark setting. */
+  autoTheme: boolean;
+  /** Prefill every set with the load from the last time on that movement. */
+  prefillLastWeight: boolean;
+  /** Jump to the next exercise on its own once the last set is done. */
+  autoAdvance: boolean;
+  /** Seconds a new routine's exercises start with. */
+  defaultRestSec: number;
+  /** Smallest plate pair available, so load maths matches the gym. */
+  minPlateKg: number;
+  /** Sessions per week the home ring aims at. */
+  weeklyGoal: number;
 };
 
 export type WorkoutSet = {
@@ -149,6 +172,8 @@ export type PersonalRecord = {
 };
 
 export type TimerMode = "descanso" | "tabata" | "emom" | "amrap" | "cronometro";
+
+export type RestPreset = { id: string; label: string; sec: number };
 
 export type GymSnapshot = {
   profile: Profile;

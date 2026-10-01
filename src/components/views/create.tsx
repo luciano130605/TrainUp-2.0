@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ChevronRight, Plus, Repeat, Trash2 } from "lucide-react";
 import { EQUIPMENT_LABEL, getExercise, MUSCLE_LABEL } from "@/lib/exercises";
 import { formatWeight, WEEKDAY_SHORT } from "@/lib/format";
-import { planPlates, BAR_OPTIONS, PLATE_KG } from "@/lib/plates";
+import { planPlates, platesFor, BAR_OPTIONS } from "@/lib/plates";
 import { useTrain } from "@/lib/store";
 import type { Routine, RoutineExercise } from "@/lib/types";
 import { cn, uid } from "@/lib/utils";
@@ -116,6 +116,7 @@ export function CreateView() {
 function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void }) {
   const save = useTrain((s) => s.saveCustomRoutine);
   const unit = useTrain((s) => s.profile.unit);
+  const defaultRestSec = useTrain((s) => s.settings.defaultRestSec);
   const isEdit = Boolean(routine);
   const [name, setName] = useState(routine?.name ?? "Mi rutina");
   const [picked, setPicked] = useState<RoutineExercise[]>(routine?.exercises ?? []);
@@ -131,7 +132,14 @@ function Creator({ routine, onDone }: { routine?: Routine; onDone: () => void })
     const ex = getExercise(id);
     setPicked((p) => [
       ...p,
-      { exerciseId: id, sets: ex.defaultSets, reps: ex.defaultReps, restSec: ex.restSec },
+      {
+        exerciseId: id,
+        sets: ex.defaultSets,
+        reps: ex.defaultReps,
+        // The athlete's own default rest (Ajustes) wins over the catalogue's,
+        // so a routine built here matches how they actually train.
+        restSec: defaultRestSec || ex.restSec,
+      },
     ]);
     setLibOpen(false);
     // Straight into the detail sheet so sets/reps/weight are set on the way in.
@@ -474,15 +482,20 @@ function formatRest(sec: number) {
 
 function BarCalculator() {
   const [target, setTarget] = useState("100");
+  const minPlateKg = useTrain((s) => s.settings.minPlateKg);
+  const rack = useMemo(() => platesFor(minPlateKg), [minPlateKg]);
   const [bar, setBar] = useState(20);
-  const plan = useMemo(() => planPlates(Number(target) || 0, bar), [target, bar]);
+  const plan = useMemo(
+    () => planPlates(Number(target) || 0, bar, minPlateKg),
+    [target, bar, minPlateKg],
+  );
   const maxH = 72;
 
   return (
     <div className="space-y-5 pb-10 stagger-in">
       <p className="text-sm text-muted">
         Decí cuánto querés levantar y cuánto pesa la barra. Armamos los discos por lado
-        ({PLATE_KG.join(" / ")} kg).
+        ({rack.join(" / ")} kg).
       </p>
 
       <label className="block">

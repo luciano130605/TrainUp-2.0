@@ -53,22 +53,30 @@ export function TabBar({
                 onClick={() => onChange(item.id)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-14 w-full flex-col items-center justify-center gap-1 rounded-xl pressable",
+                  "group flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-xl pressable transition-colors",
                   active ? "text-accent" : "text-muted",
                 )}
               >
-                <Icon className="size-[22px]" />
-
-                <span className={cn("text-[10px] tracking-wide", active ? "font-semibold" : "font-medium")}>
-                  {item.label}
-                </span>
+                {/* The active pill slides in behind the icon, so switching tabs
+                    reads as one moving surface instead of five blinking ones. */}
                 <span
                   aria-hidden
                   className={cn(
-                    "h-0.5 w-5 rounded-full transition-opacity",
-                    active ? "bg-accent opacity-100" : "opacity-0",
+                    "grid h-8 w-12 place-items-center rounded-full transition-all duration-300",
+                    active ? "scale-100 bg-accent/15" : "scale-90 bg-transparent",
                   )}
-                />
+                >
+                  <Icon className="size-[22px]" />
+                </span>
+
+                <span
+                  className={cn(
+                    "text-[10px] tracking-wide transition-transform duration-300",
+                    active ? "font-semibold -translate-y-px" : "font-medium",
+                  )}
+                >
+                  {item.label}
+                </span>
               </button>
             </li>
           );
