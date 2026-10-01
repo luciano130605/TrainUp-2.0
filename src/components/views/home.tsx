@@ -68,49 +68,6 @@ export function HomeView() {
         </div>
       ) : null}
 
-      {today ? (
-        <button
-          type="button"
-          onClick={() => startRoutine(today)}
-          className="group block w-full overflow-hidden rounded-2xl text-left pressable"
-        >
-          <div className="relative h-36 overflow-hidden rounded-2xl bg-elevated sm:h-48">
-            <img
-              src={COVER_SRC[today.cover]}
-              alt=""
-              className="absolute inset-0 size-full object-cover"
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-bg via-bg/70 to-bg/10" />
-            <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-accent">
-                {trainedToday
-                  ? "Listo por hoy"
-                  : scheduled.some((r) => r.id === today.id)
-                    ? "Programada"
-                    : "Te toca"}
-              </p>
-              <h2 className="mt-0.5 truncate font-display text-2xl leading-none sm:text-3xl">
-                {today.name}
-              </h2>
-              <p className="mt-0.5 truncate text-xs text-fg/80">
-                {today.durationMin} min · {today.exercises.length} ejercicios
-              </p>
-            </div>
-          </div>
-          <span className="mt-2 flex h-11 items-center justify-center gap-1.5 rounded-xl bg-accent text-sm font-semibold text-accent-fg">
-            {trainedToday ? "Repetir sesión" : "Empezar"}
-            <ChevronRight className="size-4" />
-          </span>
-        </button>
-      ) : null}
-
-      <section className="grid grid-cols-3 gap-2">
-        <Stat label="Racha" value={`${streak}d`} />
-        <Stat label="Volumen" value={formatVolume(weekVol, unit)} />
-        <Stat label="PRs" value={String(records.length)} />
-      </section>
-
       {scheduled.length > 0 ? (
         <section className="rounded-xl bg-elevated px-3.5 py-2.5 shadow-[var(--shadow-border)]">
           <p className="text-[10px] uppercase tracking-wider text-accent">Hoy en tu plan</p>
@@ -135,6 +92,14 @@ export function HomeView() {
           </ul>
         </section>
       ) : null}
+
+      <section className="grid grid-cols-3 gap-2">
+        <Stat label="Racha" value={`${streak}d`} />
+        <Stat label="Volumen" value={formatVolume(weekVol, unit)} />
+        <Stat label="PRs" value={String(records.length)} />
+      </section>
+
+     
 
       <section>
         <div className="mb-2 flex items-center justify-between gap-2">
